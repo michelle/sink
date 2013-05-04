@@ -1,0 +1,11 @@
+{
+  "author": "Eric Zhang & Michelle Bu & Rolland Wu
+  ",
+  "name": "sink",
+  "description": "Sink",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git@bitbucket.org:michellebu/sink.git"
+  }
+}
