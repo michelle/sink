@@ -14,7 +14,7 @@ function SinkServer(port) {
     var url = url.parse(ws.upgradeReq.url);
     var room = self.getRoom(url.query.room);
     
-    ws.send(
+    ws.send('hi');
     
     ws.on('message', function(message) {
       console.log('received: %s', message);
