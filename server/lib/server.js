@@ -16,7 +16,8 @@ function SinkServer(port) {
 
     // Parse request url.
     var wsurl = url.parse(ws.upgradeReq.url, true);
-    var room = self.getRoom(wsurl.query.room);
+    var namespace = wsurl.query.room;
+    var room = self.getRoom(namespace);
     room.add(ws);
 
     // On a message, parse it.
@@ -38,6 +39,11 @@ function SinkServer(port) {
 
     ws.on('close', function() {
       room.remove(ws);
+
+      // Reset state.
+      if (room.connections.length === 0) {
+        delete self.rooms[namespace];
+      }
     });
 
   });
@@ -68,11 +74,28 @@ Room.prototype.add = function(ws) {
   this.count += 1;
 
   // Send the entire object.
-  ws.send(JSON.stringify(['init', this.object, this.version]));
+  ws.send(JSON.stringify(['init', this.constructObject(), this.version]));
 
   // Push socket to connections.
   this.connections[ws.id] = ws;
 };
+
+Room.prototype.constructObject = function() {
+  return this.construct(this.object);
+}
+
+Room.prototype.construct = function(obj) {
+  if (typeof(obj) === 'object') {
+    var keys = Object.keys(obj);
+    for (var i = 0, ii = keys.length; i < ii; i += 1) {
+      var key = keys[i];
+      obj[key] = this.construct(obj[key].value);
+    }
+  }
+
+  return obj;
+};
+
 
 // Remove a connection, sending it the updated object.
 Room.prototype.remove = function(ws) {
@@ -80,46 +103,83 @@ Room.prototype.remove = function(ws) {
 };
 
 // Updates server version and sends updates to all clients in room.
+// TODO: account for multiple levels of properties.
 Room.prototype.update = function(updates, from) {
   var version = updates[2];
-  updates = updates[1];
-
-  // Check if collision.
-  if (version && version !== this.version) {
-    var old_fields = [];
-    for (var i = 0, ii = updates.length; i < ii; i += 1) {
-      var field = updates[i][0]
-      old_fields.push([field, this.object[field]]);
-    }
-    //old_fields.push([updates[1], updates[2]]);
-    from.send(JSON.stringify(['collision', old_fields, this.version]));
-    return;
-  }
 
   // Sync with self.
-  this.sync(updates);
+  updates = this.sync(updates, from)
   this.version += 1;
 
   // Update all clients.
-  var ids = Object.keys(this.connections);
-  for (var i = 0, ii = ids.length; i < ii; i += 1) {
-    var connection = this.connections[ids[i]];
-    if (connection.id !== from.id) {
-      connection.send(JSON.stringify(['update', updates, this.version]));
+  if (updates.length > 0) {
+    var ids = Object.keys(this.connections);
+    for (var i = 0, ii = ids.length; i < ii; i += 1) {
+      var connection = this.connections[ids[i]];
+      if (connection.id !== from.id) {
+        connection.send(JSON.stringify(['update', updates, this.version]));
+      }
+    }
+
+    // Notify original client of success.
+    from.send(JSON.stringify(['success', this.version]));
+  }
+};
+
+Room.prototype.sync = function(updates, from) {
+  var collisions = [];
+  var version = updates[2];
+  updates = updates[1];
+
+  // Confirmed updates.
+  var confirmed = [];
+
+  // Update all properties.
+  for (var i = 0, ii = updates.length; i < ii; i += 1) {
+    var update = updates[i];
+
+    // Check if collision.
+    var previous;
+    if (version && (previous = this.getLastVersion(update)) && version < previous.version) {
+      collisions.push([update[0], this.construct(previous)]);
+
+    } else {
+      this.updateObject(update);
+      confirmed.push(update);
     }
   }
 
-  // Notify original client of success.
-  from.send(JSON.stringify(['success', this.version]));
+  if (collisions.length > 0) {
+    from.send(JSON.stringify(['collision', collisions, this.version]));
+  }
+
+  return confirmed;
 };
 
-Room.prototype.sync = function(updates) {
-  // Update all properties.
-  for (var i = 0, ii = updates.length; i < ii; i += 1) {
-    this.object[updates[i][0]] = updates[i][1];
-  }
-  //this.object[updates[1]] = updates[2];
-}
 
+// TODO: handle arrays.
+Room.prototype.getLastVersion = function(update) {
+  update = update[0].split(".");
+  var obj;
+  while (update.length && (obj = this.object[update.shift()])) {
+    // Lalala.
+  }
+  return obj;
+};
+
+Room.prototype.updateObject = function(update) {
+  var value = update[1];
+  update = update[0].split(".");
+  var obj = this.object;
+  while (update.length) {
+    var key = update.shift();
+    if (update.length && (!obj[key] || typeof(obj[key].value) !== 'object')) {
+      obj[key] = { version: this.version, value: {} };
+    } else if (!update.length) {
+      obj[key] = { version: this.version, value: value };
+    }
+    obj = obj[key].value;
+  }
+};
 
 exports.SinkServer = SinkServer;
