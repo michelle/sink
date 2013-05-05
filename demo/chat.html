@@ -1,0 +1,45 @@
+<script src="../dist/sink.js"></script>
+<script
+  src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+
+<script>
+  $(document).ready(function() {
+
+    sink('chatroom', function(chat) {
+
+      if (!chat.messages) {
+        chat.messages = [];
+      }
+
+      setInterval(checkMessages, 100);
+
+      $('.chat').submit(function(ev) {
+
+        var message = $('.message').val();
+        chat.messages.push(message);
+
+        ev.preventDefault();
+
+      });
+
+      function checkMessages() {
+        $('.messages').empty();
+
+        for (var i = 0, ii = chat.messages.length; i < ii; i += 1) {
+          $('.messages').append(chat.messages[i] + '<br>');
+        }
+      }
+
+    });
+  });
+
+
+</script>
+
+<div class="messages"></div>
+
+
+<form class="chat">
+  <input type="text" class="message" />
+  <input type="submit" class="send">Send</button>
+</form>

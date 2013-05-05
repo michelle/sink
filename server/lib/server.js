@@ -15,7 +15,7 @@ function SinkServer(port) {
   this.wss.on('connection', function(ws) {
 
     // Parse request url.
-    var wsurl = url.parse(ws.upgradeReq.url);
+    var wsurl = url.parse(ws.upgradeReq.url, true);
     var room = self.getRoom(wsurl.query.room);
     room.add(ws);
 
@@ -55,38 +55,43 @@ SinkServer.prototype.getRoom = function(room) {
 function Room(namespace) {
   // TODO: save history?
   this.namespace = namespace;
-  this.connections = [];
+  this.connections = {};
   this.version = 1;
   this.object = {};
+  // IDs for WS.
+  this.count = 0;
 };
 
 // Adds a connection, sending it the updated object.
 Room.prototype.add = function(ws) {
+  ws.id = this.count;
+  this.count += 1;
+
   // Send the entire object.
   ws.send(JSON.stringify(['init', this.object, this.version]));
 
   // Push socket to connections.
-  this.connections.push(ws);
+  this.connections[ws.id] = ws;
 };
 
 // Remove a connection, sending it the updated object.
 Room.prototype.remove = function(ws) {
-  // TODO
+  delete this.connections[ws.id];
 };
 
 // Updates server version and sends updates to all clients in room.
 Room.prototype.update = function(updates, from) {
   var version = updates[2];
-  //updates = updates[1];
+  updates = updates[1];
 
   // Check if collision.
   if (version && version !== this.version) {
     var old_fields = [];
-    //for (var i = 0, ii = updates.length; i < ii; i += 1) {
-    //  var field = updates[i][0]
-    //  old_fields.push([field, this.object[field]]);
-    //}
-    old_fields.push([updates[1], updates[2]]);
+    for (var i = 0, ii = updates.length; i < ii; i += 1) {
+      var field = updates[i][0]
+      old_fields.push([field, this.object[field]]);
+    }
+    //old_fields.push([updates[1], updates[2]]);
     from.send(JSON.stringify(['collision', old_fields, this.version]));
     return;
   }
@@ -96,10 +101,13 @@ Room.prototype.update = function(updates, from) {
   this.version += 1;
 
   // Update all clients.
-  for (var i = 0, ii = this.connections.length; i < ii; i += 1) {
-    var connection = this.connections[i];
-    if (connection !== from) {
-      connection.send(JSON.stringify(['update', [[updates[1], updates[2]]], this.version]));
+  var ids = Object.keys(this.connections);
+  console.log(ids)
+  for (var i = 0, ii = ids.length; i < ii; i += 1) {
+    var connection = this.connections[ids[i]];
+    if (connection.id !== from.id) {
+      console.log('sending')
+      connection.send(JSON.stringify(['update', updates, this.version]));
     }
   }
 
@@ -109,10 +117,10 @@ Room.prototype.update = function(updates, from) {
 
 Room.prototype.sync = function(updates) {
   // Update all properties.
-  //for (var i = 0, ii = updates.length; i < ii; i += 1) {
-  //  this.object[updates[0]] = updates[1];
-  //}
-  this.object[updates[1]] = updates[2];
+  for (var i = 0, ii = updates.length; i < ii; i += 1) {
+    this.object[updates[i][0]] = updates[i][1];
+  }
+  //this.object[updates[1]] = updates[2];
 }
 
 

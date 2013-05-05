@@ -1,4 +1,58 @@
 <script src="../dist/sink.js"></script>
+<script
+  src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+
+<script>
+  $(document).ready(function() {
+
+    sink('tester', function(s) {
+
+      // TODO: support lists.
+
+      var total = 1;
+
+      $('.test').submit(function(ev) {
+
+        for (var i = 0; i < total; i += 1) {
+          var field = $('.property-' + i).val();
+          var value = $('.value-' + i).val();
+          if (field !== '') {
+            // TODO: support JSON.
+            s[field] = /*JSON.parse(*/value/*}*/;
+          }
+        }
+
+        // Clear.
+        $('input[type=text]').val('');
+
+        ev.preventDefault();
+
+      });
+
+      $('.add').click(function(ev) {
+        $('.more').append($('<input type="text" class="property-' + total + '"/>'));
+        $('.more').append($('<input type="text" class="value-' + total + '"/>'));
+        $('.more').append($('<br>'));
+        total += 1;
+      });
+
+      setInterval(function() { console.log(s); }, 1000);
+
+    });
+  });
 
 
-Hi this is a demo.
+</script>
+
+<h1>This demo logs changes to the sink object.</h1>
+<h6>TODO: test stuff like `x.y = {}; x.y.b = 'hard';` simultaneously.
+
+<form class="test">
+  <input type="text" class="property-0" />
+  <input type="text" class="value-0" />
+  <br>
+  <div class="more"></div>
+  <input type="submit" class="send" />
+</form>
+<br>
+<button class="add">Add a property</button>
