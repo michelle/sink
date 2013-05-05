@@ -17,16 +17,10 @@ function SinkServer(port) {
     // Parse request url.
     var url = url.parse(ws.upgradeReq.url);
     var room = self.getRoom(url.query.room);
-<<<<<<< HEAD
-    
-    ws.send('hi');
-    
-=======
     room.add(ws);
 
     // On a message, parse it.
     // [ (TYPE), (PROPERTY NAME), (PROPERTY VALUE), (VERSION #)? ]
->>>>>>> de5f2e2317c3c9ec70cd290b4353b571125da9a5
     ws.on('message', function(message) {
       console.log('received: %s', message);
 

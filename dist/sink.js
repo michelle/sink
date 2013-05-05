@@ -3,15 +3,15 @@
 util = {
   getChromeProxyFunctions: function(obj) {
     return {
-<<<<<<< HEAD
       get: function(receiver, name) {
         return obj[name];
       },
 
-=======
->>>>>>> de5f2e2317c3c9ec70cd290b4353b571125da9a5
       set: function(receiver, name, pd) {
-        var socket = new WebSocket(
+        var socket = new WebSocket('localhost:9090');
+        //LAYOUT:[ ‘update’, ‘michelle.lastname’, ‘bu’, 1 ]
+        console.log("version")
+        var sendme = ['update', name, pd, version]
         obj[name] = pd;
       },
 
@@ -57,18 +57,44 @@ util = {
         return undefined;
       }
     };
-  }
-};
+  },
 
-function updateRest(obj, updates, currentVersion){
-    
-}function sink(namespace, cb) {
+  setZeroTimeout: (function(global) {
+    var timeouts = [];
+    var messageName = 'zero-timeout-message';
+
+    // Like setTimeout, but only takes a function argument.	 There's
+    // no time argument (always zero) and no arguments (you have to
+    // use a closure).
+    function setZeroTimeoutPostMessage(fn) {
+      timeouts.push(fn);
+      global.postMessage(messageName, '*');
+    }
+
+    function handleMessage(event) {
+      if (event.source == global && event.data == messageName) {
+        if (event.stopPropagation) {
+          event.stopPropagation();
+        }
+        if (timeouts.length) {
+          timeouts.shift()();
+        }
+      }
+    }
+    if (global.addEventListener) {
+      global.addEventListener('message', handleMessage, true);
+    } else if (global.attachEvent) {
+      global.attachEvent('onmessage', handleMessage);
+    }
+    return setZeroTimeoutPostMessage;
+  }(this))
+};function sink(namespace, cb) {
 
   var o = {};
 
   // Chrome Harmony Proxies
   var p = Proxy.create(util.getChromeProxyFunctions(o));
-<<<<<<< HEAD
+
   // start ws connection
   var socket = new WebSocket('localhost:9000');
   var currentVersion = 1;
@@ -133,12 +159,6 @@ function updateRest(obj, updates, currentVersion){
         currentVersion = version;
     }
   };
-  
-=======
-
-  cb(p);
-
->>>>>>> de5f2e2317c3c9ec70cd290b4353b571125da9a5
 };
 
 exports.sink = sink;
