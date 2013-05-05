@@ -8,5 +8,8 @@
   },
   "repository": "",
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "ws": "~0.4.25"
+  }
 }

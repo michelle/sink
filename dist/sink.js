@@ -3,10 +3,13 @@
 util = {
   getChromeProxyFunctions: function(obj) {
     return {
+<<<<<<< HEAD
       get: function(receiver, name) {
         return obj[name];
       },
 
+=======
+>>>>>>> de5f2e2317c3c9ec70cd290b4353b571125da9a5
       set: function(receiver, name, pd) {
         var socket = new WebSocket(
         obj[name] = pd;
@@ -65,6 +68,7 @@ function updateRest(obj, updates, currentVersion){
 
   // Chrome Harmony Proxies
   var p = Proxy.create(util.getChromeProxyFunctions(o));
+<<<<<<< HEAD
   // start ws connection
   var socket = new WebSocket('localhost:9000');
   var currentVersion = 1;
@@ -130,6 +134,11 @@ function updateRest(obj, updates, currentVersion){
     }
   };
   
+=======
+
+  cb(p);
+
+>>>>>>> de5f2e2317c3c9ec70cd290b4353b571125da9a5
 };
 
 exports.sink = sink;
