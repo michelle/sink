@@ -6,9 +6,6 @@
   $(document).ready(function() {
 
     sink('tester', function(s) {
-
-      // TODO: support lists.
-
       var total = 1;
 
       $('.test').submit(function(ev) {
@@ -16,10 +13,42 @@
         for (var i = 0; i < total; i += 1) {
           var field = $('.property-' + i).val();
           var value = $('.value-' + i).val();
-          if (field !== '') {
-            // TODO: support JSON.
-            s[field] = /*JSON.parse(*/value/*}*/;
+
+          // TODO: support lists.
+          field = field.split('.');
+          // TOP LEVEL property.
+          if (field.length === 1) {
+            field = field[0];
+            if (field !== '') {
+              // TODO: support JSON.
+              try {
+                var jsonvalue = JSON.parse(value);
+                value = jsonvalue;
+              } catch (e) {
+              }
+
+              s[field] = value;
+            }
+
+          } else {
+            var edit = s;
+            while (field.length !== 0) {
+
+              if (!edit) {
+                console.log('ERR: This property doesn\'t exist!');
+                return;
+              }
+
+              var property = field.shift();
+
+              if (field.length === 0) {
+                edit[property] = value;
+              } else {
+                edit = edit[property];
+              }
+            }
           }
+
         }
 
         // Clear.
