@@ -42,6 +42,6 @@ sink('mybathroom', function(s) {
 
 * `namespace`: All Sink objects in the same namespace are synced.
 * `options`:
-** `force`: If true, will ignore collisions and always update the server and all other clients. Defaults to false.
-** `collision (: function(err) {} )`: A callback that will be called if a collision is detected on a change to the synced object.
-** `server`: URL of your Sink server. Defaults to the cloud server, for which `namespace` must be an API key.
+  * `force`: If true, will ignore collisions and always update the server and all other clients. Defaults to false.
+  * `collision (: function(err) {} )`: A callback that will be called if a collision is detected on a change to the synced object.
+  * `server`: URL of your Sink server. Defaults to the cloud server, for which `namespace` must be an API key.
