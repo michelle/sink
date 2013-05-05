@@ -77,15 +77,16 @@ Room.prototype.remove = function(ws) {
 // Updates server version and sends updates to all clients in room.
 Room.prototype.update = function(updates, from) {
   var version = updates[2];
-  updates = updates[1];
+  //updates = updates[1];
 
   // Check if collision.
   if (version && version !== this.version) {
     var old_fields = [];
-    for (var i = 0, ii = updates.length; i < ii; i += 1) {
-      var field = updates[i][0]
-      old_fields.push([field, this.object[field]]);
-    }
+    //for (var i = 0, ii = updates.length; i < ii; i += 1) {
+    //  var field = updates[i][0]
+    //  old_fields.push([field, this.object[field]]);
+    //}
+    old_fields.push([updates[1], updates[2]]);
     from.send(JSON.stringify(['collision', old_fields, this.version]));
     return;
   }
@@ -98,7 +99,7 @@ Room.prototype.update = function(updates, from) {
   for (var i = 0, ii = this.connections.length; i < ii; i += 1) {
     var connection = this.connections[i];
     if (connection !== from) {
-      connection.send(JSON.stringify(['update', updates, this.version]));
+      connection.send(JSON.stringify(['update', [[updates[1], updates[2]]], this.version]));
     }
   }
 
@@ -108,9 +109,10 @@ Room.prototype.update = function(updates, from) {
 
 Room.prototype.sync = function(updates) {
   // Update all properties.
-  for (var i = 0, ii = updates.length; i < ii; i += 1) {
-    this.object[updates[0]] = updates[1];
-  }
+  //for (var i = 0, ii = updates.length; i < ii; i += 1) {
+  //  this.object[updates[0]] = updates[1];
+  //}
+  this.object[updates[1]] = updates[2];
 }
 
 
