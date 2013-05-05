@@ -15,8 +15,8 @@ function SinkServer(port) {
   this.wss.on('connection', function(ws) {
 
     // Parse request url.
-    var url = url.parse(ws.upgradeReq.url);
-    var room = self.getRoom(url.query.room);
+    var wsurl = url.parse(ws.upgradeReq.url);
+    var room = self.getRoom(wsurl.query.room);
     room.add(ws);
 
     // On a message, parse it.
