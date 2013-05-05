@@ -9,7 +9,7 @@
       var total = 1;
 
       // Expose the sink object.
-      window.exposed = s;
+      window._exposed = s;
 
       $('.test').submit(function(ev) {
 
@@ -62,6 +62,7 @@
       });
 
       $('.add').click(function(ev) {
+        console.log('c')
         $('.more').append($('<input type="text" class="property-' + total + '"/>'));
         $('.more').append($('<input type="text" class="value-' + total + '"/>'));
         $('.more').append($('<br>'));
