@@ -102,11 +102,9 @@ Room.prototype.update = function(updates, from) {
 
   // Update all clients.
   var ids = Object.keys(this.connections);
-  console.log(ids)
   for (var i = 0, ii = ids.length; i < ii; i += 1) {
     var connection = this.connections[ids[i]];
     if (connection.id !== from.id) {
-      console.log('sending')
       connection.send(JSON.stringify(['update', updates, this.version]));
     }
   }
