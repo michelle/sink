@@ -8,6 +8,9 @@
     sink('tester', function(s) {
       var total = 1;
 
+      // Expose the sink object.
+      window.exposed = s;
+
       $('.test').submit(function(ev) {
 
         for (var i = 0; i < total; i += 1) {
