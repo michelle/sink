@@ -2,6 +2,8 @@
 (function(exports){
 util = {
   getChromeProxyFunctions: function(obj, metadata) {
+    console.log('init proxy functions', metadata);
+
     return {
       get: function(receiver, name) {
         return obj[name];
@@ -11,7 +13,7 @@ util = {
         var socket = metadata.socket;
         //LAYOUT:[ ‘update’, ‘michelle.lastname’, ‘bu’, 1 ]
         var sendme = ['update', name, pd, metadata.version]
-        socket.send(sendme);
+        socket.send(JSON.stringify(sendme));
         obj[name] = pd;
       },
 
@@ -88,10 +90,11 @@ util = {
     }
     return setZeroTimeoutPostMessage;
   }(this))
-};function sink(namespace, cb) {
+};
+function sink(namespace, cb) {
 
   var o = {};
-  var metadata = {version: 1};
+  var metadata = { version: 1 };
 
   // Chrome Harmony Proxies
   var p = Proxy.create(util.getChromeProxyFunctions(o, metadata));
@@ -99,6 +102,7 @@ util = {
   // start ws connection
   var socket = new WebSocket('ws://localhost:8080?room=' + namespace);
   metadata.socket = socket
+
   /*
   Current method for collisions: If we receive an update with version = 
   currentVersion+2, we begin storing all changed variables. Then when we receive
@@ -114,7 +118,8 @@ util = {
     var properties = data[1];
     var propertyName = properties[0];
     var val = properties[1];
-    var version = properties[2];
+    var version = parseInt(properties[2]);
+    console.log('version', version);
     if (messageType === 'init') {
         console.log("init");
         //initialize our object with all the recieved values
@@ -160,6 +165,8 @@ util = {
         //version is the updated value
         console.log("Collision Detected!");
         //TODO: Call the collision function if it exists
+        //DEFAULT if initializing and already existant var, ignore
+        //Otherwise, nothing?
     } else if (messageType == 'success'){
         metadata.version = version;
     }
