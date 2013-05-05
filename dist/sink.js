@@ -1,17 +1,17 @@
 /*! sink.js build:0.0.0, development. Copyright(c) 2013 Eric Zhang, Michelle Bu, Rolland Wu MIT Licensed */
 (function(exports){
 util = {
-  getChromeProxyFunctions: function(obj) {
+  getChromeProxyFunctions: function(obj, metadata) {
     return {
       get: function(receiver, name) {
         return obj[name];
       },
 
       set: function(receiver, name, pd) {
-        var socket = new WebSocket('localhost:9090');
+        var socket = metadata.socket;
         //LAYOUT:[ ‘update’, ‘michelle.lastname’, ‘bu’, 1 ]
-        console.log("version")
-        var sendme = ['update', name, pd, version]
+        var sendme = ['update', name, pd, metadata.version]
+        socket.send(sendme);
         obj[name] = pd;
       },
 
@@ -91,13 +91,14 @@ util = {
 };function sink(namespace, cb) {
 
   var o = {};
+  var metadata = {version: 1};
 
   // Chrome Harmony Proxies
-  var p = Proxy.create(util.getChromeProxyFunctions(o));
+  var p = Proxy.create(util.getChromeProxyFunctions(o, metadata));
 
   // start ws connection
-  var socket = new WebSocket('localhost:9000');
-  var currentVersion = 1;
+  var socket = new WebSocket('ws://localhost:8080?room=' + namespace);
+  metadata.socket = socket
   /*
   Current method for collisions: If we receive an update with version = 
   currentVersion+2, we begin storing all changed variables. Then when we receive
@@ -107,24 +108,28 @@ util = {
   var updateOutOfOrder = {};
   // bind ws handlers
   socket.onmessage = function(event) {
-    var messageType = event.data[0];
-    var properties = event.data[1];
+    console.log("received message:" + event.data);
+    var data = JSON.parse(event.data);
+    var messageType = data[0];
+    var properties = data[1];
     var propertyName = properties[0];
     var val = properties[1];
     var version = properties[2];
-    if (messageType == 'init') {
+    if (messageType === 'init') {
+        console.log("init");
         //initialize our object with all the recieved values
         for (var j = 0, jj = properties.length; j < jj; j++) {
             p[propertyName] = val;
         }
         //callback
-        currentVersion = version;
+        metadata.version = version;
         cb(p);
-    } else if (messageType == 'update') {
-        if (version > currentVersion + 1){
+        console.log("callback called")
+    } else if (messageType === 'update') {
+        if (version > metadata.version + 1){
             //received a future update message, do not apply
             updateOutOfOrder[version] = event;
-        } else if (version === currentVersion+1) {
+        } else if (version === metadata.version+1) {
             for (var j = 0, jj = properties.length; j < jj; j++) {
                 p[propertyName] = val;
             }
@@ -149,14 +154,14 @@ util = {
             //receiving an update from the past
             //SHOULD NEVER HAPPEN IN CURRENT IMPLEMENTATION
             console.log("received old version: " + version);
-            console.log("Current version is: " + currentVersion);
+            console.log("Current version is: " + metadata.version);
         }
     } else if (messageType == 'collision') {
         //version is the updated value
         console.log("Collision Detected!");
         //TODO: Call the collision function if it exists
     } else if (messageType == 'success'){
-        currentVersion = version;
+        metadata.version = version;
     }
   };
 };
