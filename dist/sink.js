@@ -3,10 +3,6 @@
 util = {
   getChromeProxyFunctions: function(obj) {
     return {
-      get: function(receiver, name) {
-        return obj[name]
-      },
-
       set: function(receiver, name, pd) {
         obj[name] = pd;
       },
@@ -59,10 +55,9 @@ util = {
 function sink(namespace, cb) {
 
   var o = {};
-  var a = {}
 
   // Chrome Harmony Proxies
-  var p = Proxy.create(util.getChromeProxyFunctions(o, a));
+  var p = Proxy.create(util.getChromeProxyFunctions(o));
 
   cb(p);
 
