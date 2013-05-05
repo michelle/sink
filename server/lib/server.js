@@ -1,5 +1,5 @@
 var url = require('url');
-var WebSocketServer = require('ws').Server
+var WebSocketServer = require('ws').Server;
 
 function SinkServer(port) {
 
