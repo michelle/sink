@@ -87,7 +87,6 @@ Room.prototype.constructObject = function() {
 Room.prototype.construct = function(obj, ret) {
   if (typeof(obj) === 'object') {
     var keys = Object.keys(obj);
-    console.log(obj, keys)
     for (var i = 0, ii = keys.length; i < ii; i += 1) {
       var key = keys[i];
       ret[key] = this.construct(obj[key].value, {});
@@ -176,13 +175,28 @@ Room.prototype.updateObject = function(update) {
   var obj = this.object;
   while (update.length) {
     var key = update.shift();
-    if (update.length && (!obj[key] || typeof(obj[key].value) !== 'object')) {
+    if (update.length && (!obj[key] || (typeof(obj[key].value) !== 'object' && typeof(obj[key] !== 'object')))) {
       obj[key] = { version: this.version, value: {} };
     } else if (!update.length) {
       obj[key] = { version: this.version, value: value };
     }
     obj = obj[key].value;
   }
+
+  function toSpecialObj(_obj) {
+    if (typeof(_obj) === 'object') {
+      var keys = Object.keys(_obj);
+      for (var i = 0, ii = keys.length; i < ii; i += 1) {
+
+        var key = keys[i];
+        _obj[key] = { version: this.version, value: _obj[key] };
+        toSpecialObj(_obj[key].value);
+      }
+    }
+  }
+
+  // Takes care of nested objects.
+  toSpecialObj(obj);
 };
 
 exports.SinkServer = SinkServer;
