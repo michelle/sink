@@ -12,6 +12,7 @@
       window._exposed = s;
 
       $('.test').submit(function(ev) {
+        ev.preventDefault();
 
         for (var i = 0; i < total; i += 1) {
           var field = $('.property-' + i).val();
@@ -57,7 +58,6 @@
         // Clear.
         $('input[type=text]').val('');
 
-        ev.preventDefault();
 
       });
 
