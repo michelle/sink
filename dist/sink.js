@@ -86,7 +86,7 @@ util = {
       },
 
       delete: function(name) {
-        return delete obj.name;
+        return delete obj[name];
       },
 
       fix: function() {
