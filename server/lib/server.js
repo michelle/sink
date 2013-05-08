@@ -81,19 +81,22 @@ Room.prototype.add = function(ws) {
 };
 
 Room.prototype.constructObject = function() {
-  return this.construct(this.object);
+  return this.construct(this.object, {});
 }
 
-Room.prototype.construct = function(obj) {
+Room.prototype.construct = function(obj, ret) {
   if (typeof(obj) === 'object') {
     var keys = Object.keys(obj);
+    console.log(obj, keys)
     for (var i = 0, ii = keys.length; i < ii; i += 1) {
       var key = keys[i];
-      obj[key] = this.construct(obj[key].value);
+      ret[key] = this.construct(obj[key].value, {});
     }
+  } else {
+    ret = obj;
   }
 
-  return obj;
+  return ret;
 };
 
 
@@ -141,7 +144,7 @@ Room.prototype.sync = function(updates, from) {
     // Check if collision.
     var previous;
     if (version && (previous = this.getLastVersion(update)) && version < previous.version) {
-      collisions.push([update[0], this.construct(previous)]);
+      collisions.push([update[0], this.construct(previous, {})]);
 
     } else {
       this.updateObject(update);

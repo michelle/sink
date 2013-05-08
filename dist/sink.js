@@ -1,8 +1,13 @@
 /*! sink.js build:0.0.0, development. Copyright(c) 2013 Eric Zhang, Michelle Bu, Rolland Wu MIT Licensed */
 (function(exports){
 util = {
-  getChromeProxyFunctions: function(obj, metadata) {
-    console.log('init proxy functions', metadata);
+  getChromeProxyFunctions: function(obj, metadata, path) {
+    console.log('init proxy functions', metadata, path);
+
+    if (path !== '') {
+      path += '.';
+    }
+
     var updates = [];
 
     // Send updates incrementally.
@@ -11,7 +16,7 @@ util = {
         return;
       }
 
-      metadata.socket.send(JSON.stringify(['update', updates, metadata.version]));
+      metadata.socket.send(JSON.stringify(['update', updates, (metadata.force ? undefined : metadata.version)]));
       updates = [];
     };
 
@@ -21,8 +26,35 @@ util = {
       },
 
       set: function(receiver, name, pd) {
+        function proxify(_obj, _path) {
+          if (typeof(_obj) !== 'object') {
+            return _obj;
+          }
+
+          var p = {};
+          // Create proxy now or later?
+          var _p = Proxy.create(util.getChromeProxyFunctions(p, metadata, _path));
+
+          if (_path !== '') {
+            _path += '.';
+          }
+
+          var fields = Object.keys(_obj);
+          for (var i = 0, ii = fields.length; i < ii; i += 1) {
+            var field = fields[i];
+            p[field] = proxify(_obj[field], _path + field);
+          }
+
+          return _p;
+        };
+
         var socket = metadata.socket; //LAYOUT:[ ‘update’, [[‘michelle.lastname’, ‘bu’]], 1 ]
-        updates.push([name, pd]);
+        updates.push([path + name, pd]);
+
+        // RECURSIVE PROXYYYYYY.
+        if (typeof(pd) === 'object') {
+          pd = proxify(pd, path + name);
+        }
         obj[name] = pd;
 
         util.setZeroTimeout(sendUpdates);
@@ -102,17 +134,21 @@ util = {
     return setZeroTimeoutPostMessage;
   }(this))
 };
-function sink(namespace, cb) {
+function sink(namespace, options, cb) {
+  if (typeof(options) === 'function') {
+    cb = options;
+    options = {};
+  }
 
   var o = {};
-  var metadata = { version: 1 };
+  options.version = 1;
 
   // Chrome Harmony Proxies
-  var p = Proxy.create(util.getChromeProxyFunctions(o, metadata));
+  var p = Proxy.create(util.getChromeProxyFunctions(o, options, ''));
 
   // start ws connection
   var socket = new WebSocket('ws://localhost:8080?room=' + namespace);
-  metadata.socket = socket;
+  options.socket = socket;
 
   /* Current method for collisions: If we receive an update with version = 
    * currentVersion+2, we begin storing all changed variables. Then when we receive
@@ -133,11 +169,11 @@ function sink(namespace, cb) {
   };
 
   function updateObject(properties, version) {
-    if (version > metadata.version + 1){
+    if (version && version > options.version + 1){
       // received a future update message, do not apply
       updateOutOfOrder[version] = event;
 
-    } else if (version === metadata.version + 1) {
+    } else if (!version || version === options.version + 1) {
 
       for (var j = 0, jj = properties.length; j < jj; j++) {
         var property = properties[j];
@@ -169,7 +205,7 @@ function sink(namespace, cb) {
       // receiving an update from the past
       // SHOULD NEVER HAPPEN IN CURRENT IMPLEMENTATION
       console.log("received old version: " + version);
-      console.log("Current version is: " + metadata.version);
+      console.log("Current version is: " + options.version);
     }
   };
 
@@ -184,23 +220,22 @@ function sink(namespace, cb) {
     if (message_type === 'init') {
       initObject(properties);
 
-    } else if (message_type === 'update') {
+    } else if (message_type === 'update' || message_type === 'collision') {
       updateObject(properties, version);
 
-    } else if (message_type === 'collision') {
-
-      // version is the updated value
-      console.log("Collision Detected!");
-      // TODO: Call the collision function if it exists
-      // DEFAULT if initializing and already existant var, ignore
-      // Otherwise, nothing?
+      if (message_type === 'collision') {
+        // TODO: what to pass into the collision callback?
+        if (options.collision) {
+          options.collision(new Error('You tried to update the sink at the same time as someone else!'));
+        }
+      }
 
     } else if (message_type === 'success') {
       version = data[1];
     }
 
     // else success
-    metadata.version = version;
+    options.version = version;
   };
 };
 
