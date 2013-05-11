@@ -32,9 +32,7 @@ function SinkServer(port) {
         return;
       }
 
-      if (message[0] === 'update') {
-        room.update(message, ws);
-      }
+      room.update(message, ws);
     });
 
     ws.on('close', function() {
@@ -108,13 +106,12 @@ Room.prototype.remove = function(ws) {
 // TODO: account for multiple levels of properties.
 Room.prototype.update = function(updates, from) {
   var version = updates[2];
+  var type = updates[0];
 
   //console.log(JSON.stringify(updates));
   // Sync with self.
-  // TODO: references bug in sync.
   updates = this.sync(updates, from)
   this.version += 1;
-  console.log(JSON.stringify(this.object))
   //console.log(JSON.stringify(updates));
 
   // Update all clients.
@@ -123,7 +120,7 @@ Room.prototype.update = function(updates, from) {
     for (var i = 0, ii = ids.length; i < ii; i += 1) {
       var connection = this.connections[ids[i]];
       if (connection.id !== from.id) {
-        connection.send(JSON.stringify(['update', updates, this.version]));
+        connection.send(JSON.stringify([type, updates, this.version]));
       }
     }
 
@@ -135,6 +132,7 @@ Room.prototype.update = function(updates, from) {
 Room.prototype.sync = function(updates, from) {
   var collisions = [];
   var version = updates[2];
+  var type = updates[0];
   updates = updates[1];
 
   // Confirmed updates.
@@ -150,7 +148,11 @@ Room.prototype.sync = function(updates, from) {
       collisions.push([update[0], this.construct(previous, {})]);
 
     } else {
-      this.updateObject(update);
+      if (type === 'update') {
+        this.updateObject(update);
+      } else {
+        this.deleteProperty(update);
+      }
       confirmed.push(update);
     }
   }
@@ -173,10 +175,27 @@ Room.prototype.getLastVersion = function(update) {
   return obj;
 };
 
+// Deletes a property.
+Room.prototype.deleteProperty = function(update) {
+  // TODO: error checks. here we assume everything can be found...
+  update = update.split(".");
+  var obj = this.object;
+
+  while (update.length) {
+    var key = update.shift();
+    if (!update.length) {
+      delete obj[key];
+    } else {
+      obj = obj[key].value;
+    }
+  }
+}
+
 Room.prototype.updateObject = function(update) {
   var value = update[1];
   update = update[0].split(".");
   var obj = this.object;
+
   while (update.length) {
     var key = update.shift();
     if (update.length && (!obj[key] || (typeof(obj[key].value) !== 'object' && typeof(obj[key] !== 'object')))) {

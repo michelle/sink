@@ -9,15 +9,19 @@ util = {
     }
 
     var updates = [];
+    var deletes = [];
 
     // Send updates incrementally.
     function sendUpdates() {
-      if (updates.length === 0) {
-        return;
+      if (updates.length !== 0) {
+        metadata.socket.send(JSON.stringify(['update', updates, (metadata.force ? undefined : metadata.version)]));
+        updates = [];
       }
 
-      metadata.socket.send(JSON.stringify(['update', updates, (metadata.force ? undefined : metadata.version)]));
-      updates = [];
+      if (deletes.length !== 0) {
+        metadata.socket.send(JSON.stringify(['delete', deletes, (metadata.force ? undefined : metadata.version)]));
+        deletes = [];
+      }
     };
 
     return {
@@ -90,6 +94,10 @@ util = {
       },
 
       delete: function(name) {
+        // propagate delete to server.
+        deletes.push(path + name);
+        util.setZeroTimeout(sendUpdates);
+
         delete nested[path + '.' + name];
         return delete obj[name];
       },
@@ -175,13 +183,7 @@ function sink(namespace, options, cb) {
     cb(p);
   };
 
-  function updateObject(properties, version) {
-    /*if (version && version > options.version + 1){
-      // received a future update message, do not apply
-      updateOutOfOrder[version] = event;
-
-    } else if (!version || version === options.version + 1) {
-    */
+  function updateObject(properties) {
     for (var j = 0, jj = properties.length; j < jj; j++) {
       var property = properties[j];
       property[0] = property[0].split('.');
@@ -191,37 +193,22 @@ function sink(namespace, options, cb) {
       nested[nesting][key] = property[1];
     }
 
-      /*
-      // Check if we have waiting updates
-      updateKeys = Object.keys(updateOutOfOrder);
-      if (updateKeys.length !== 0) {
-        // update from updateOutOfOrder
-        var updateVersion = version + 1;
-        while (updateOutOfOrder[updateVersion]) {
-
-          var updateEvent = updateOutOfOrder[updateVersion];
-          var updateproperties = updateEvent[1];
-          var updateName = updateProperties[0];
-          var updateVal = updateProperties[1];
-
-          for (var j = 0, jj = updateProperties.length; j < jj; j++) {
-            p[updateName] = updateLength;
-          }
-
-          delete updateOutOfOrder[updateVersion]
-          updateVersion += 1;
-        }
-      }
-
-    } else {
-      // receiving an update from the past
-      // SHOULD NEVER HAPPEN IN CURRENT IMPLEMENTATION
-      console.log("received old version: " + version);
-      console.log("Current version is: " + options.version);
-    }*/
-
     // We should not be receiving messages out of order.
   };
+
+  function deleteProperties(properties) {
+    for (var j = 0, jj = properties.length; j < jj; j++) {
+      var property = properties[j];
+      var continuation = property;
+      property = property.split('.');
+      var key = property.pop();
+      var nesting = property.join('.');
+
+      delete nested[nesting][key];
+      // TODO: delete all further nested things in continuation.
+      delete nested[continuation];
+    }
+  }
 
   // bind ws handlers
   socket.onmessage = function(event) {
@@ -235,7 +222,7 @@ function sink(namespace, options, cb) {
       initObject(properties);
 
     } else if (message_type === 'update' || message_type === 'collision') {
-      updateObject(properties, version);
+      updateObject(properties);
 
       if (message_type === 'collision') {
         // TODO: what to pass into the collision callback?
@@ -243,6 +230,9 @@ function sink(namespace, options, cb) {
           options.collision(new Error('You tried to update the sink at the same time as someone else!'));
         }
       }
+
+    } else if (message_type === 'delete') {
+      deleteProperties(properties);
 
     } else if (message_type === 'success') {
       version = data[1];
