@@ -36,7 +36,6 @@ util = {
           }
 
           var p = {};
-          // Create proxy now or later?
           var _p = Proxy.create(util.getChromeProxyFunctions(p, metadata, _path, nested));
           nested[_path] = p;
 
@@ -53,13 +52,9 @@ util = {
           return _p;
         };
 
-        if (!pd.__sinkAddedProperty) {
-          var socket = metadata.socket; //LAYOUT:[ ‘update’, [[‘michelle.lastname’, ‘bu’]], 1 ]
-          updates.push([path + name, pd]);
-          util.setZeroTimeout(sendUpdates);
-        } else {
-          pd = pd.__sinkAddedProperty;
-        }
+        var socket = metadata.socket; //LAYOUT:[ ‘update’, [[‘michelle.lastname’, ‘bu’]], 1 ]
+        updates.push([path + name, pd]);
+        util.setZeroTimeout(sendUpdates);
 
         // RECURSIVE PROXYYYYYY.
         if (typeof(pd) === 'object') {
