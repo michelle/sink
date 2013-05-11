@@ -169,17 +169,18 @@ function sink(namespace, options, cb) {
   };
 
   function updateObject(properties, version) {
-    if (version && version > options.version + 1){
+    /*if (version && version > options.version + 1){
       // received a future update message, do not apply
       updateOutOfOrder[version] = event;
 
     } else if (!version || version === options.version + 1) {
+    */
+    for (var j = 0, jj = properties.length; j < jj; j++) {
+      var property = properties[j];
+      o[property[0]] = property[1];
+    }
 
-      for (var j = 0, jj = properties.length; j < jj; j++) {
-        var property = properties[j];
-        o[property[0]] = property[1];
-      }
-
+      /*
       // Check if we have waiting updates
       updateKeys = Object.keys(updateOutOfOrder);
       if (updateKeys.length !== 0) {
@@ -206,7 +207,9 @@ function sink(namespace, options, cb) {
       // SHOULD NEVER HAPPEN IN CURRENT IMPLEMENTATION
       console.log("received old version: " + version);
       console.log("Current version is: " + options.version);
-    }
+    }*/
+
+    // We should not be receiving messages out of order.
   };
 
   // bind ws handlers
