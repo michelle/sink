@@ -2,7 +2,7 @@
 (function(exports){
 util = {
   getChromeProxyFunctions: function(obj, metadata, path, nested) {
-    console.log('init proxy functions', metadata, path);
+    util.log('Init proxy functions', metadata, path);
 
     if (path !== '') {
       path += '.';
@@ -117,6 +117,21 @@ util = {
     };
   },
 
+  log: function () {
+    if (util.debug) {
+      var err = false;
+      var copy = Array.prototype.slice.call(arguments);
+      copy.unshift('SINK: ');
+      for (var i = 0, l = copy.length; i < l; i++){
+        if (copy[i] instanceof Error) {
+          copy[i] = '(' + copy[i].name + ') ' + copy[i].message;
+          err = true;
+        }
+      }
+      err ? console.error.apply(console, copy) : console.log.apply(console, copy);
+    }
+  },
+
   setZeroTimeout: (function(global) {
     var timeouts = [];
     var messageName = 'zero-timeout-message';
@@ -213,7 +228,7 @@ function sink(namespace, options, cb) {
   // bind ws handlers
   socket.onmessage = function(event) {
     var data = JSON.parse(event.data);
-    console.log("received message:", data);
+    util.log("Received message:", data);
     var message_type = data[0];
     var properties = data[1];
     var version = data[2];
