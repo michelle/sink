@@ -1,7 +1,7 @@
 /*! sink.js build:0.0.0, development. Copyright(c) 2013 Eric Zhang, Michelle Bu, Rolland Wu MIT Licensed */
 (function(exports){
 util = {
-  getChromeProxyFunctions: function(obj, metadata, path) {
+  getChromeProxyFunctions: function(obj, metadata, path, nested) {
     console.log('init proxy functions', metadata, path);
 
     if (path !== '') {
@@ -33,7 +33,8 @@ util = {
 
           var p = {};
           // Create proxy now or later?
-          var _p = Proxy.create(util.getChromeProxyFunctions(p, metadata, _path));
+          var _p = Proxy.create(util.getChromeProxyFunctions(p, metadata, _path, nested));
+          nested[_path] = p;
 
           if (_path !== '') {
             _path += '.';
@@ -48,16 +49,19 @@ util = {
           return _p;
         };
 
-        var socket = metadata.socket; //LAYOUT:[ ‘update’, [[‘michelle.lastname’, ‘bu’]], 1 ]
-        updates.push([path + name, pd]);
+        if (!pd.__sinkAddedProperty) {
+          var socket = metadata.socket; //LAYOUT:[ ‘update’, [[‘michelle.lastname’, ‘bu’]], 1 ]
+          updates.push([path + name, pd]);
+          util.setZeroTimeout(sendUpdates);
+        } else {
+          pd = pd.__sinkAddedProperty;
+        }
 
         // RECURSIVE PROXYYYYYY.
         if (typeof(pd) === 'object') {
           pd = proxify(pd, path + name);
         }
         obj[name] = pd;
-
-        util.setZeroTimeout(sendUpdates);
       },
 
       // Fundamental traps.
@@ -86,6 +90,7 @@ util = {
       },
 
       delete: function(name) {
+        delete nested[path + '.' + name];
         return delete obj[name];
       },
 
@@ -141,10 +146,12 @@ function sink(namespace, options, cb) {
   }
 
   var o = {};
+  var nested = {};
+  nested[''] = o;
   options.version = 1;
 
   // Chrome Harmony Proxies
-  var p = Proxy.create(util.getChromeProxyFunctions(o, options, ''));
+  var p = Proxy.create(util.getChromeProxyFunctions(o, options, '', nested));
 
   // start ws connection
   var socket = new WebSocket('ws://localhost:8080?room=' + namespace);
@@ -177,7 +184,11 @@ function sink(namespace, options, cb) {
     */
     for (var j = 0, jj = properties.length; j < jj; j++) {
       var property = properties[j];
-      o[property[0]] = property[1];
+      property[0] = property[0].split('.');
+      var key = property[0].pop();
+      var nesting = property[0].join('.');
+
+      nested[nesting][key] = property[1];
     }
 
       /*

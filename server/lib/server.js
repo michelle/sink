@@ -109,9 +109,12 @@ Room.prototype.remove = function(ws) {
 Room.prototype.update = function(updates, from) {
   var version = updates[2];
 
+  //console.log(JSON.stringify(updates));
   // Sync with self.
+  // TODO: references bug in sync.
   updates = this.sync(updates, from)
   this.version += 1;
+  //console.log(JSON.stringify(updates));
 
   // Update all clients.
   if (updates.length > 0) {
