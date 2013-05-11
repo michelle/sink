@@ -114,6 +114,7 @@ Room.prototype.update = function(updates, from) {
   // TODO: references bug in sync.
   updates = this.sync(updates, from)
   this.version += 1;
+  console.log(JSON.stringify(this.object))
   //console.log(JSON.stringify(updates));
 
   // Update all clients.
