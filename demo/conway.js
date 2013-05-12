@@ -1,50 +1,61 @@
+// Create an m x n matrix.
+Array.matrix = function (m, n, initial) {
+  var a, i, j, mat = [];
+  for (i = 0; i < m; i += 1) {
+    a = [];
+    for (j = 0; j < n; j += 1) {
+      a[j] = 0;
+    }
+    mat[i] = a;
+  }
+  return mat;
+};
+
+// Grid utils
+function Cell(row, column) {
+  this.row = row;
+  this.column = column;
+};
+
+
 $(document).ready(
+
   function() {
-    sink('life_test', {debug: true}, function(Life){
-      //Create matrix for LIFE
-      Array.matrix = function (m, n, initial) {
-        var a, i, j, mat = [];
-        for (i = 0; i < m; i += 1) {
-          a = [];
-          for (j = 0; j < n; j += 1) {
-            a[j] = 0;
-          }
-          mat[i] = a;
-        }
-        return mat;
-      };
+    var gridCanvas = document.getElementById("grid");
+    var counterSpan = document.getElementById("counter");
 
-      // TODO: remove this
-      window._life = Life;
+    sink('game_of_life_demo', { debug: true }, function(Life){
 
+      // If variables are not initialized, do so.
       var originator;
-      //Initialize variables (need to check first?)
       if (Life.CELL_SIZE === undefined) {
         Life.CELL_SIZE = 20;
         Life.X = 400;
         Life.Y = 400;
+
         Life.WIDTH = Life.X / Life.CELL_SIZE;
         Life.HEIGHT = Life.Y / Life.CELL_SIZE;
+
         Life.DEAD = 0;
         Life.ALIVE = 1;
-        Life.DELAY = 3000;
+
+        // TODO: will it ever be stopped?
         Life.STOPPED = 0;
         Life.RUNNING = 1;
+        Life.DELAY = 3000;
 
         Life.minimum = 2;
         Life.maximum = 3;
         Life.spawn = 3;
 
-        //Life.state = Life.STOPPED;
         Life.state = Life.RUNNING;
         Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
         Life.counter = 0;
       }
 
-
+      // Game of life logic
       function updateState() {
         var neighbors;
-
         var nextGenerationGrid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
 
         for (var h = 0; h < Life.HEIGHT; h++) {
@@ -77,6 +88,7 @@ $(document).ready(
             }
           }
         }
+
         return total;
       };
 
@@ -88,42 +100,9 @@ $(document).ready(
         }
       };
 
-      function Cell(row, column) {
-        this.row = row;
-        this.column = column;
-      };
 
-      var gridCanvas = document.getElementById("grid");
-      var counterSpan = document.getElementById("counter");
-
-      /*
-      var controlLink = document.getElementById("controlLink");
-      var clearLink = document.getElementById("clearLink");
-
-      controlLink.onclick = function() {
-        switch (Life.state) {
-        case Life.STOPPED:
-          Life.interval = setInterval(function() {
-            update();
-          }, Life.DELAY);
-          Life.state = Life.RUNNING;
-          break;
-        default:
-          clearInterval(Life.interval);
-          Life.state = Life.STOPPED;
-        }
-      };
-
-      clearLink.onclick = function() {
-        Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
-        Life.counter = 0;
-        clearInterval(Life.interval);
-        Life.state = Life.STOPPED;
-        updateAnimations();
-      }*/
-
-      //render function
-      function updateAnimations() {
+      // render function
+      function render() {
         for (var h = 0; h < Life.HEIGHT; h++) {
           for (var w = 0; w < Life.WIDTH; w++) {
             if (Life.grid[h][w] === Life.ALIVE) {
@@ -151,10 +130,11 @@ $(document).ready(
           }
         }
 
-        window.webkitRequestAnimationFrame(updateAnimations);
+        // Recurse render loop.
+        window.webkitRequestAnimationFrame(render);
       };
 
-      //initialize canvas
+      // initialize canvas
       if (gridCanvas.getContext) {
         var context = gridCanvas.getContext('2d');
         var offset = Life.CELL_SIZE;
@@ -174,7 +154,6 @@ $(document).ready(
           var cell = getCursorPosition(event);
           var state = Life.grid[cell.row][cell.column] ^ 1;
           Life.grid[cell.row][cell.column] = state;
-          //updateAnimations();
         };
 
         function getCursorPosition(event) {
@@ -201,13 +180,13 @@ $(document).ready(
         };
 
         gridCanvas.addEventListener("click", canvasOnClickHandler, false);
-        //updateAnimations()
       } else {
-        //Canvas check
+        // Canvas check
         console.log("Canvas failed to load");
       }
 
-      window.webkitRequestAnimationFrame(updateAnimations);
+      // Start render loop.
+      window.webkitRequestAnimationFrame(render);
     });
   }
 );
