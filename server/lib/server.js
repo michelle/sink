@@ -79,15 +79,19 @@ Room.prototype.add = function(ws) {
 };
 
 Room.prototype.constructObject = function() {
-  return this.construct(this.object, {});
+  return this.construct(this.object);
 }
 
-Room.prototype.construct = function(obj, ret) {
+Room.prototype.construct = function(obj) {
+  var ret;
   if (typeof(obj) === 'object') {
+    ret = util.isArray(obj) ? [] : {};
+
     var keys = Object.keys(obj);
     for (var i = 0, ii = keys.length; i < ii; i += 1) {
       var key = keys[i];
-      ret[key] = this.construct(obj[key].value, {});
+      var next_obj = obj[key].value;
+      ret[key] = this.construct(next_obj);
     }
   } else {
     ret = obj;
@@ -145,7 +149,7 @@ Room.prototype.sync = function(updates, from) {
     // Check if collision.
     var previous;
     if (version && (previous = this.getLastVersion(update)) && version < previous.version) {
-      collisions.push([update[0], this.construct(previous, {})]);
+      collisions.push([update[0], this.construct(previous)]);
 
     } else {
       if (type === 'update') {
@@ -192,7 +196,8 @@ Room.prototype.deleteProperty = function(update) {
 }
 
 Room.prototype.updateObject = function(update) {
-  var value = update[1];
+  // deepcopy hack
+  var value = JSON.parse(JSON.stringify(update[1]));
   update = update[0].split(".");
   var obj = this.object;
 
