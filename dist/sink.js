@@ -71,7 +71,8 @@ util = {
       },
 
       getPropertyDescriptor: function(name) {
-        var desc = Object.getPropertyDescriptor(obj, name);
+        // getPropertyDescriptor not in ES5
+        var desc = Object.getOwnPropertyDescriptor(obj, name);
         if (desc !== undefined) { desc.configurable = true; }
         return desc;
       },
@@ -81,7 +82,7 @@ util = {
       },
 
       getPropertyNames: function(name) {
-        return Object.getPropertyNames(obj);
+        return Object.keys(obj);
       },
 
       defineProperty: function(name, pd) {

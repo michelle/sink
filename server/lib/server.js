@@ -1,8 +1,8 @@
 var url = require('url');
+var util = require('./util.js');
 var WebSocketServer = require('ws').Server;
 
 function SinkServer(port) {
-
   var self = this;
 
   port = port || 8080;
@@ -23,7 +23,7 @@ function SinkServer(port) {
     // On a message, parse it.
     // [ (TYPE), (PROPERTY NAME), (PROPERTY VALUE), (VERSION #)? ]
     ws.on('message', function(message) {
-      console.log('received: %s', message);
+      console.log('Received: %s', message);
 
       // Try to parse the message.
       try {
