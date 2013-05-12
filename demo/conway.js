@@ -1,6 +1,6 @@
 $(document).ready(
   function() {
-    sink('life_test', function(Life){
+    sink('life_test', {debug: true}, function(Life){
       //Create matrix for LIFE
       Array.matrix = function (m, n, initial) {
         var a, i, j, mat = [];
@@ -14,31 +14,32 @@ $(document).ready(
         return mat;
       };
 
+      // TODO: remove this
+      window._life = Life;
+
       //Initialize variables (need to check first?)
-      Life.CELL_SIZE = 8;
-      Life.X = 40;
-      Life.Y = 40;
-      Life.WIDTH = Life.X / Life.CELL_SIZE;
-      Life.HEIGHT = Life.Y / Life.CELL_SIZE;
-      Life.DEAD = 0;
-      Life.ALIVE = 1;
-      Life.DELAY = 500;
-      Life.STOPPED = 0;
-      Life.RUNNING = 1;
+      if (Life.CELL_SIZE === undefined) {
+        Life.CELL_SIZE = 8;
+        Life.X = 40;
+        Life.Y = 40;
+        Life.WIDTH = Life.X / Life.CELL_SIZE;
+        Life.HEIGHT = Life.Y / Life.CELL_SIZE;
+        Life.DEAD = 0;
+        Life.ALIVE = 1;
+        Life.DELAY = 500;
+        Life.STOPPED = 0;
+        Life.RUNNING = 1;
 
-      Life.minimum = 2;
-      Life.maximum = 3;
-      Life.spawn = 3;
+        Life.minimum = 2;
+        Life.maximum = 3;
+        Life.spawn = 3;
 
-      Life.state = Life.STOPPED;
-      console.log("DEBUG1")
-      Life.interval;
-      console.log("DEBUG2")
-      Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
-      console.log("DEBUG3")
-      Life.counter = 0;
-      console.log('hi')
-      
+        Life.state = Life.STOPPED;
+        Life.interval;
+        Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
+        Life.counter = 0;
+      }
+
       function updateState() {
         var neighbors;
 
@@ -79,7 +80,9 @@ $(document).ready(
 
       function copyGrid(source, destination) {
         for (var h = 0; h < Life.HEIGHT; h++) {
-          destination[h] = source[h].slice(0);
+          for (var w = 0; w < Life.WIDTH; w++) {
+            destination[h][w] = source[h][w];
+          }
         }
       };
 
@@ -141,7 +144,6 @@ $(document).ready(
 
       //initialize canvas
       if (gridCanvas.getContext) {
-        console.log('hi')
         var context = gridCanvas.getContext('2d');
         var offset = Life.CELL_SIZE;
 
@@ -185,7 +187,7 @@ $(document).ready(
             Math.floor((x - 2) / Life.CELL_SIZE));
           return cell;
         };
-        
+
         gridCanvas.addEventListener("click", canvasOnClickHandler, false);
         updateAnimations()
       } else {
