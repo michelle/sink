@@ -5,7 +5,8 @@
 <script>
   $(document).ready(function() {
 
-    sink('chatroom', function(chat) {
+    var room = window.location.hash.split('#').pop() || 'chatroom';
+    sink(room, function(chat) {
 
       if (!chat.messages) {
         chat.messages = [];
