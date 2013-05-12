@@ -17,16 +17,17 @@ $(document).ready(
       // TODO: remove this
       window._life = Life;
 
+      var originator;
       //Initialize variables (need to check first?)
       if (Life.CELL_SIZE === undefined) {
-        Life.CELL_SIZE = 8;
-        Life.X = 40;
-        Life.Y = 40;
+        Life.CELL_SIZE = 20;
+        Life.X = 400;
+        Life.Y = 400;
         Life.WIDTH = Life.X / Life.CELL_SIZE;
         Life.HEIGHT = Life.Y / Life.CELL_SIZE;
         Life.DEAD = 0;
         Life.ALIVE = 1;
-        Life.DELAY = 500;
+        Life.DELAY = 3000;
         Life.STOPPED = 0;
         Life.RUNNING = 1;
 
@@ -34,11 +35,12 @@ $(document).ready(
         Life.maximum = 3;
         Life.spawn = 3;
 
-        Life.state = Life.STOPPED;
-        Life.interval;
+        //Life.state = Life.STOPPED;
+        Life.state = Life.RUNNING;
         Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
         Life.counter = 0;
       }
+
 
       function updateState() {
         var neighbors;
@@ -93,6 +95,8 @@ $(document).ready(
 
       var gridCanvas = document.getElementById("grid");
       var counterSpan = document.getElementById("counter");
+
+      /*
       var controlLink = document.getElementById("controlLink");
       var clearLink = document.getElementById("clearLink");
 
@@ -116,12 +120,7 @@ $(document).ready(
         clearInterval(Life.interval);
         Life.state = Life.STOPPED;
         updateAnimations();
-      }
-
-      function update() {
-        updateState();
-        updateAnimations();
-      };
+      }*/
 
       //render function
       function updateAnimations() {
@@ -140,6 +139,19 @@ $(document).ready(
           }
         }
         counterSpan.innerHTML = Life.counter;
+
+        if (!Life.originator) {
+          originator = true;
+          Life.originator = true;
+
+          setInterval(updateState, Life.DELAY);
+
+          window.onbeforeunload = function() {
+            Life.originator = false;
+          }
+        }
+
+        window.webkitRequestAnimationFrame(updateAnimations);
       };
 
       //initialize canvas
@@ -162,7 +174,7 @@ $(document).ready(
           var cell = getCursorPosition(event);
           var state = Life.grid[cell.row][cell.column] ^ 1;
           Life.grid[cell.row][cell.column] = state;
-          updateAnimations();
+          //updateAnimations();
         };
 
         function getCursorPosition(event) {
@@ -189,11 +201,13 @@ $(document).ready(
         };
 
         gridCanvas.addEventListener("click", canvasOnClickHandler, false);
-        updateAnimations()
+        //updateAnimations()
       } else {
         //Canvas check
         console.log("Canvas failed to load");
       }
+
+      window.webkitRequestAnimationFrame(updateAnimations);
     });
   }
 );
