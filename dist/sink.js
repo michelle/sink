@@ -30,8 +30,6 @@ util = {
       },
 
       set: function(receiver, name, pd) {
-        util.log('Setting property', name, pd);
-
         // no change.
         if (obj[name] === pd) {
           return;
