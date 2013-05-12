@@ -30,27 +30,7 @@ util = {
       },
 
       set: function(receiver, name, pd) {
-        function proxify(_obj, _path) {
-          if (typeof(_obj) !== 'object') {
-            return _obj;
-          }
-
-          var p = {};
-          var _p = Proxy.create(util.getChromeProxyFunctions(p, metadata, _path, nested));
-          nested[_path] = p;
-
-          if (_path !== '') {
-            _path += '.';
-          }
-
-          var fields = Object.keys(_obj);
-          for (var i = 0, ii = fields.length; i < ii; i += 1) {
-            var field = fields[i];
-            p[field] = proxify(_obj[field], _path + field);
-          }
-
-          return _p;
-        };
+        util.log('Setting property');
 
         var socket = metadata.socket; //LAYOUT:[ ‘update’, [[‘michelle.lastname’, ‘bu’]], 1 ]
         updates.push([path + name, pd]);
@@ -58,7 +38,7 @@ util = {
 
         // RECURSIVE PROXYYYYYY.
         if (typeof(pd) === 'object') {
-          pd = proxify(pd, path + name);
+          pd = util.proxify(pd, path + name, {metadata: metadata, nested: nested});
         }
         obj[name] = pd;
       },
@@ -98,6 +78,14 @@ util = {
         return delete obj[name];
       },
 
+      enumerate: function() {
+        var result = [];
+        for (var name in obj) {
+          result.push(name);
+        };
+        return result;
+      },
+
       fix: function() {
         if (Object.isFrozen(obj)) {
           var result = {};
@@ -111,6 +99,41 @@ util = {
         return undefined;
       }
     };
+  },
+
+  proxify: function(_obj, _path, _opts) {
+    if (typeof(_obj) !== 'object' || !_obj) {
+      return _obj;
+    }
+
+    var is_arr = util.isArray(_obj);
+    var p = {};
+    var proto = Object.prototype;
+    if (is_arr) {
+      p = [];
+      proto = Array.prototype;
+    }
+
+    var _p = Proxy.create(util.getChromeProxyFunctions(p, _opts.metadata, _path, _opts.nested), proto);
+    _opts.nested[_path] = p;
+
+    if (is_arr) {
+      for (var i = 0, ii = _obj.length; i < ii; i += 1) {
+        p[i] = util.proxify(_obj[i], _path + '.' + i, _opts);
+      }
+    } else {
+      var fields = Object.keys(_obj);
+      for (var i = 0, ii = fields.length; i < ii; i += 1) {
+        var field = fields[i];
+        p[field] = util.proxify(_obj[field], _path + '.' + field, _opts);
+      }
+    }
+
+    return _p;
+  },
+
+  isArray: function(obj) {
+    return Object.prototype.toString.call(obj) === "[object Array]" || obj.constructor === Array;
   },
 
   log: function () {
@@ -164,6 +187,8 @@ function sink(namespace, options, cb) {
     options = {};
   }
 
+  util.debug = options.debug;
+
   var o = {};
   var nested = {};
   nested[''] = o;
@@ -188,7 +213,7 @@ function sink(namespace, options, cb) {
     var fields = Object.keys(properties);
     for (var j = 0, jj = fields.length; j < jj; j++) {
       var field = fields[j];
-      o[field] = properties[field];
+      o[field] = util.proxify(properties[field], field, {metadata: options, nested: nested});
     }
 
     cb(p);
