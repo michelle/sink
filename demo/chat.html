@@ -1,46 +1,57 @@
-<script src="../dist/sink.js"></script>
-<script
-  src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+<html>
 
-<script>
-  $(document).ready(function() {
+  <head>
+    <link href="chat.css" rel="stylesheet" type="text/css">
+    <script src="../dist/sink.js"></script>
+    <script
+      src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
 
-    var room = window.location.hash.split('#').pop() || 'chatroom';
-    sink(room, function(chat) {
+    <script>
+      $(document).ready(function() {
 
-      if (!chat.messages) {
-        chat.messages = [];
-      }
+        var room = window.location.hash.split('#').pop() || 'chatroom';
+        sink(room, function(chat) {
 
-      setInterval(checkMessages, 100);
+          if (!chat.messages) {
+            chat.messages = [];
+          }
 
-      $('.chat').submit(function(ev) {
+          setInterval(checkMessages, 100);
 
-        var message = $('.message').val();
-        chat.messages.push(message);
+          $('.chat').submit(function(ev) {
 
-        ev.preventDefault();
+            var message = $('.message').val();
+            chat.messages.push(message);
 
+            ev.preventDefault();
+
+          });
+
+          function checkMessages() {
+            $('.messages').empty();
+
+            for (var i = 0, ii = chat.messages.length; i < ii; i += 1) {
+              $('.messages').append(chat.messages[i] + '<br>');
+            }
+          }
+
+        });
       });
 
-      function checkMessages() {
-        $('.messages').empty();
 
-        for (var i = 0, ii = chat.messages.length; i < ii; i += 1) {
-          $('.messages').append(chat.messages[i] + '<br>');
-        }
-      }
+    </script>
+  </head>
 
-    });
-  });
+  <body>
+
+    <div class="messages"></div>
 
 
-</script>
+    <form class="chat">
+      <input type="text" class="message" />
+      <input type="submit" class="send" value="send">
+    </form>
 
-<div class="messages"></div>
+  </body>
 
-
-<form class="chat">
-  <input type="text" class="message" />
-  <input type="submit" class="send" value="send">
-</form>
+</html>
