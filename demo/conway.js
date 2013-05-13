@@ -178,8 +178,10 @@ $(document).ready(
         }
         counterSpan.innerHTML = Life.counter;
         populationSpan.innerHTML = Life.population;
-        if (Life.control[id] !== undefined) {
+        if (Life.control[id] && Life.population) {
           myPopulationSpan.innerHTML = Math.round(Life.control[id] * 100 / Life.population) + '%';
+        } else {
+          myPopulationSpan.innerHTML = '0%';
         }
 
         if (!Life.originator) {
