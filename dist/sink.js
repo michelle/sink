@@ -1,6 +1,15 @@
 /*! sink.js build:0.0.0, development. Copyright(c) 2013 Eric Zhang, Michelle Bu, Rolland Wu MIT Licensed */
 (function(exports){
 util = {
+  extend: function(dest, source) {
+    for(var key in source) {
+      if(source.hasOwnProperty(key)) {
+        dest[key] = source[key];
+      }
+    }
+    return dest;
+  },
+
   getChromeProxyFunctions: function(obj, metadata, path, nested) {
     util.log('Init proxy functions', metadata, path);
 
@@ -190,19 +199,22 @@ function sink(namespace, options, cb) {
     options = {};
   }
 
+  options = util.extend({
+    port: '8080',
+    host: 'localhost',
+    collision: function() {},
+    version: 1,
+    debug: false
+  }, options);
+
   util.debug = options.debug;
 
   var o = {};
   var nested = {};
   nested[''] = o;
-  options.version = 1;
 
   var server = options.host;
-  if (server) {
-    server += options.port ? ':' + options.port : '';
-  } else {
-    server = 'localhost:8080';
-  }
+  server += options.port ? ':' + options.port : '';
 
   // Chrome Harmony Proxies
   var p = Proxy.create(util.getChromeProxyFunctions(o, options, '', nested));
@@ -265,9 +277,7 @@ function sink(namespace, options, cb) {
 
       if (message_type === 'collision') {
         // TODO: what to pass into the collision callback?
-        if (options.collision) {
-          options.collision(new Error('You tried to update the sink at the same time as someone else!'));
-        }
+        options.collision(new Error('You tried to update the sink at the same time as someone else!'));
       }
 
     } else if (message_type === 'delete') {

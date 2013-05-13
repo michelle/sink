@@ -17,6 +17,20 @@ function Cell(row, column) {
   this.column = column;
 };
 
+function findMax(dict) {
+  var keys = Object.keys(dict);
+  var max = 0;
+  var maxKey;
+  for (var i = 0, ii = keys.length; i < ii; i += 1) {
+    var current = dict[keys[i]];
+    if (current >= max) {
+      max = current;
+      maxKey = keys[i];
+    }
+  }
+  return maxKey;
+};
+
 
 $(document).ready(
 
@@ -131,19 +145,6 @@ $(document).ready(
         return [total, total === Life.spawn && dead ? findMax(control) : null];
       };
 
-      function findMax(dict) {
-        var keys = Object.keys(dict);
-        var max = 0;
-        var maxKey;
-        for (var i = 0, ii = keys.length; i < ii; i += 1) {
-          var current = dict[keys[i]];
-          if (current >= max) {
-            max = current;
-            maxKey = keys[i];
-          }
-        }
-        return maxKey;
-      };
 
       function copyGrid(source, destination) {
         for (var h = 0; h < Life.HEIGHT; h++) {
