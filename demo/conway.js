@@ -17,6 +17,15 @@ function Cell(row, column) {
   this.column = column;
 };
 
+function copyGrid(source, destination, width, height) {
+  for (var h = 0; h < height; h++) {
+    for (var w = 0; w < width; w++) {
+      destination[h][w] = source[h][w];
+    }
+  }
+};
+
+// Returns the key with the max value in the given dict.
 function findMax(dict) {
   var keys = Object.keys(dict);
   var max = 0;
@@ -35,6 +44,8 @@ function findMax(dict) {
 $(document).ready(
 
   function() {
+
+    // DOM elements
     var gridCanvas = document.getElementById("grid");
     var counterSpan = document.getElementById("counter");
     var populationSpan = document.getElementById("population");
@@ -54,10 +65,6 @@ $(document).ready(
         Life.HEIGHT = Life.Y / Life.CELL_SIZE;
 
         Life.DEAD = 0;
-
-        // TODO: will it ever be stopped?
-        Life.STOPPED = 0;
-        Life.RUNNING = 1;
         Life.DELAY = 2000;
 
         Life.minimum = 2;
@@ -65,7 +72,6 @@ $(document).ready(
         Life.spawn = 3;
         Life.id = 0;
 
-        Life.state = Life.RUNNING;
         Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
         Life.counter = 0;
 
@@ -79,12 +85,15 @@ $(document).ready(
       Life.control[id] = 0;
 
       // Game of life logic
+      // Only the originator performs this step.
       function updateState() {
         var neighbors;
         var nextGenerationGrid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
         var population = 0;
         var control = {};
 
+        // Update each cell.
+        // TODO: any way to memoize this?
         for (var h = 0; h < Life.HEIGHT; h++) {
           for (var w = 0; w < Life.WIDTH; w++) {
             neighbors = calculateNeighbors(h, w);
@@ -117,12 +126,15 @@ $(document).ready(
             }
           }
         }
-        copyGrid(nextGenerationGrid, Life.grid);
+
+        // Copy into Life grid and update all values.
+        copyGrid(nextGenerationGrid, Life.grid, Life.WIDTH, Life.HEIGHT);
         Life.control = control;
         Life.population = population;
         Life.counter++;
       };
 
+      // Game of life logic
       function calculateNeighbors(y, x) {
         var dead = Life.grid[y][x] === Life.DEAD;
         var total = !dead ? -1 : 0;
@@ -145,14 +157,6 @@ $(document).ready(
         return [total, total === Life.spawn && dead ? findMax(control) : null];
       };
 
-
-      function copyGrid(source, destination) {
-        for (var h = 0; h < Life.HEIGHT; h++) {
-          for (var w = 0; w < Life.WIDTH; w++) {
-            destination[h][w] = source[h][w];
-          }
-        }
-      };
 
 
       // render function
@@ -177,6 +181,8 @@ $(document).ready(
               Life.CELL_SIZE -1);
           }
         }
+
+        // Populate spans.
         counterSpan.innerHTML = Life.counter;
         populationSpan.innerHTML = Life.population;
         if (Life.control[id] && Life.population) {
@@ -185,6 +191,7 @@ $(document).ready(
           myPopulationSpan.innerHTML = '0%';
         }
 
+        // Ensure that there is always one originator to run game logic.
         if (!Life.originator) {
           originator = true;
           Life.originator = true;
@@ -193,6 +200,7 @@ $(document).ready(
 
           window.onbeforeunload = function() {
             Life.originator = false;
+            delete Life.control[id];
           }
         }
 
@@ -258,6 +266,11 @@ $(document).ready(
 
       // Start render loop.
       window.webkitRequestAnimationFrame(render);
+
+      // Clean up properly.
+      window.onbeforeunload = function() {
+        delete Life.control[id];
+      }
     });
   }
 );
