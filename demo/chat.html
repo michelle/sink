@@ -9,29 +9,41 @@
     <script>
       $(document).ready(function() {
 
-        var room = window.location.hash.split('#').pop() || 'chatroom';
+        // Get chatroom name.
+        var room = window.location.hash.split('#').pop() || 'Global';
+        $('.name').html(room);
+
         sink(room, function(chat) {
 
+          // Initialization.
           if (!chat.messages) {
             chat.messages = [];
           }
 
           setInterval(checkMessages, 100);
 
+          // Chat message.
           $('.chat').submit(function(ev) {
 
             var message = $('.message').val();
             chat.messages.push(message);
+            $('.message').val('');
 
             ev.preventDefault();
 
           });
 
+          var length = 0;
           function checkMessages() {
             $('.messages').empty();
 
             for (var i = 0, ii = chat.messages.length; i < ii; i += 1) {
-              $('.messages').append(chat.messages[i] + '<br>');
+              $('.messages').append('<div class="line">' + chat.messages[i] + '</div>');
+            }
+
+            if (chat.messages.length !== length) {
+              length = chat.messages.length;
+              $('.messagewrap').scrollTop($('.messages').height());
             }
           }
 
@@ -44,13 +56,17 @@
 
   <body>
 
-    <div class="messages"></div>
+    <div class="container">
+      <div class="title">room: <span class="name"></span></div>
 
+      <div class="messagewrap">
+        <div class="messages"></div>
+      </div>
 
-    <form class="chat">
-      <input type="text" class="message" />
-      <input type="submit" class="send" value="send">
-    </form>
+      <form class="chat">
+        <input type="text" class="message" /><input type="submit" class="send" value="send">
+      </form>
+    </div>
 
   </body>
 

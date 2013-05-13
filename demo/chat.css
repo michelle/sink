@@ -2,3 +2,89 @@ html{color:#000;background:#FFF;}body,div,dl,dt,dd,ul,ol,li,pre,code,form,fields
 a {outline: none;} /* Gets rid of Firefox's dotted borders */
 a img {border: none;} /* Gets rid of IE's blue borders */
 
+body, html {
+  background: #eee;
+  color: #444;
+  font-family: Helvetica, Arial;
+}
+
+.title {
+  background: #444;
+  border: 1px solid #444;
+  border-radius: 3px 3px 0 0;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 -1px 0 #333;
+  text-transform: uppercase;
+  padding: 10px;
+}
+
+.name {
+  color: #81AEBA;
+}
+
+.container {
+  width: 600px;
+  margin: 30px auto;
+}
+
+.messagewrap {
+  border: 1px solid #ccc;
+  border-width: 0 1px;
+  height: 200px;
+  overflow-y: scroll;
+  background: #fff;
+}
+
+.messages {
+
+}
+
+.line {
+  padding: 5px 10px;
+}
+
+.line:nth-child(odd) {
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-width: 1px 0;
+}
+
+.message {
+  box-sizing: border-box;
+  color: #81AEBA;
+  width: 550px;
+  margin: 0;
+  border: 1px solid #81AEBA;
+  border-radius: 0 0 0 3px;
+  border-width: 1px 0 1px 1px;
+  padding: 4px 10px;
+  outline: none;
+}
+.message:hover {
+  background: #f4fcfe;
+}
+
+.send {
+  background: #81AEBA;
+  border: 1px solid #588a97;
+  border-radius: 0 0 3px 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  width: 50px;
+  margin: 0;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  height: 28px;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+
+.chat {
+  border-spacing: 0;
+  position: relative;
+}
