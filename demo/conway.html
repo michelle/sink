@@ -1,16 +1,30 @@
-<script src="../dist/sink.js"></script>
-<script
-src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+<html>
 
-<script type="text/javascript" src="raf.js"></script>
-<script type="text/javascript" src="conway.js"></script>
+  <head>
+    <script src="../dist/sink.js"></script>
+    <script
+    src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
 
-<body>
-  <div id="container">
-    <div id="left-content">
-        <h2>Game of Life</h2>
-        <p>Generation counter: <span id="counter">0</span></p>
-        <canvas id="grid" width="400" height="400"></canvas>
+    <script type="text/javascript" src="raf.js"></script>
+    <script type="text/javascript" src="conway.js"></script>
+
+    <link href="conway.css" rel="stylesheet" type="text/css"> 
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="left-content">
+        <div class="title">
+          <h1>Game of Life</h1>
+          <div id="scoreboard">
+            <div>In generation <span id="counter">0</span>,</div>
+            <div>you control <span id="score">0%</span></div>
+            <div>of the total population, <span id="population"></span>.</div>
+          </div>
+        </div>
+        <canvas id="grid" width="600" height="600"></canvas>
+      </div>
     </div>
-  </div>
-</body>
+  </body>
+
+</html>

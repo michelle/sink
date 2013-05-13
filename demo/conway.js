@@ -23,73 +23,126 @@ $(document).ready(
   function() {
     var gridCanvas = document.getElementById("grid");
     var counterSpan = document.getElementById("counter");
+    var populationSpan = document.getElementById("population");
+    var myPopulationSpan = document.getElementById("score");
 
     sink('game_of_life_demo', { debug: true }, function(Life){
 
       // If variables are not initialized, do so.
       var originator;
+      var id;
       if (Life.CELL_SIZE === undefined) {
         Life.CELL_SIZE = 20;
-        Life.X = 400;
-        Life.Y = 400;
+        Life.X = 600;
+        Life.Y = 600;
 
         Life.WIDTH = Life.X / Life.CELL_SIZE;
         Life.HEIGHT = Life.Y / Life.CELL_SIZE;
 
         Life.DEAD = 0;
-        Life.ALIVE = 1;
 
         // TODO: will it ever be stopped?
         Life.STOPPED = 0;
         Life.RUNNING = 1;
-        Life.DELAY = 3000;
+        Life.DELAY = 2000;
 
         Life.minimum = 2;
         Life.maximum = 3;
         Life.spawn = 3;
+        Life.id = 0;
 
         Life.state = Life.RUNNING;
         Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
         Life.counter = 0;
+
+        Life.population = 0;
+        Life.control = {};
       }
+
+      Life.id += 1;
+
+      id = Life.id;
+      Life.control[id] = 0;
 
       // Game of life logic
       function updateState() {
         var neighbors;
         var nextGenerationGrid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
+        var population = 0;
+        var control = {};
 
         for (var h = 0; h < Life.HEIGHT; h++) {
           for (var w = 0; w < Life.WIDTH; w++) {
             neighbors = calculateNeighbors(h, w);
-            if (Life.grid[h][w] !== Life.DEAD) {
-              if ((neighbors >= Life.minimum) &&
-                (neighbors <= Life.maximum)) {
-                  nextGenerationGrid[h][w] = Life.ALIVE;
+            var count = neighbors[0];
+            var majority = neighbors[1];
+            var current = Life.grid[h][w];
+
+            if (current !== Life.DEAD) {
+              if ((count >= Life.minimum) && (count <= Life.maximum)) {
+                nextGenerationGrid[h][w] = current;
+
+                if (!control[current]) {
+                  control[current] = 0;
+                }
+                control[current] += 1;
+                population += 1;
               }
-            } else {
-              if (neighbors === Life.spawn) {
-                nextGenerationGrid[h][w] = Life.ALIVE;
+            } else if (majority) {
+              try {
+                nextGenerationGrid[h][w] = parseInt(majority);
+
+                if (!control[majority]) {
+                  control[majority] = 0;
+                }
+                control[majority] += 1;
+                population += 1;
+              } catch (e) {
+                nextGenerationGrid[h][w] = Life.DEAD;
               }
             }
           }
         }
         copyGrid(nextGenerationGrid, Life.grid);
+        Life.control = control;
+        Life.population = population;
         Life.counter++;
       };
 
       function calculateNeighbors(y, x) {
-        var total = (Life.grid[y][x] !== Life.DEAD) ? -1 : 0;
-        for (var h = -1; h <= 1; h++) {
-          for (var w = -1; w <= 1; w++) {
-            if (Life.grid
-              [(Life.HEIGHT + (y + h)) % Life.HEIGHT]
-              [(Life.WIDTH + (x + w)) % Life.WIDTH] !== Life.DEAD) {
-                  total++;
+        var dead = Life.grid[y][x] === Life.DEAD;
+        var total = !dead ? -1 : 0;
+        var control = {};
+        for (var h = -1; h <= 1; h += 1) {
+          for (var w = -1; w <= 1; w += 1) {
+
+            var current = Life.grid[(Life.HEIGHT + (y + h)) % Life.HEIGHT]
+              [(Life.WIDTH + (x + w)) % Life.WIDTH];
+            if (current !== Life.DEAD) {
+              total += 1;
+              if (!control[current]) {
+                control[current] = 0;
+              }
+              control[current] += 1;
             }
           }
         }
 
-        return total;
+        return [total, total === Life.spawn && dead ? findMax(control) : null];
+      };
+
+      function findMax(dict) {
+        var keys = Object.keys(dict);
+        var max = 0;
+        var maxKey;
+        for (var i = 0, ii = keys.length; i < ii; i += 1) {
+          var current = dict[keys[i]];
+          if (current >= max) {
+            max = current;
+            maxKey = keys[i];
+          }
+        }
+        return maxKey;
       };
 
       function copyGrid(source, destination) {
@@ -105,8 +158,14 @@ $(document).ready(
       function render() {
         for (var h = 0; h < Life.HEIGHT; h++) {
           for (var w = 0; w < Life.WIDTH; w++) {
-            if (Life.grid[h][w] === Life.ALIVE) {
-              context.fillStyle = "#000";
+            if (Life.grid[h][w] !== Life.DEAD) {
+              if (Life.grid[h][w] === id) {
+                context.fillStyle = '#D94436';
+              } else {
+                context.fillStyle = "#444";
+              }
+            } else if (Life.grid[h][w] === Life.CORPSE) {
+              context.fillStyle = "#ccc";
             } else {
               context.fillStyle = "#eee";
             }
@@ -118,6 +177,10 @@ $(document).ready(
           }
         }
         counterSpan.innerHTML = Life.counter;
+        populationSpan.innerHTML = Life.population;
+        if (Life.control[id] !== undefined) {
+          myPopulationSpan.innerHTML = Math.round(Life.control[id] * 100 / Life.population) + '%';
+        }
 
         if (!Life.originator) {
           originator = true;
@@ -152,8 +215,13 @@ $(document).ready(
 
         function canvasOnClickHandler(event) {
           var cell = getCursorPosition(event);
-          var state = Life.grid[cell.row][cell.column] ^ 1;
-          Life.grid[cell.row][cell.column] = state;
+          var current = Life.grid[cell.row][cell.column];
+          // Don't allow user to kill existing ones that are not his own.
+          if (current === id) {
+            Life.grid[cell.row][cell.column] = Life.DEAD;
+          } else if (current === Life.DEAD) {
+            Life.grid[cell.row][cell.column] = id;
+          }
         };
 
         function getCursorPosition(event) {
