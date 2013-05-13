@@ -84,7 +84,7 @@ Room.prototype.constructObject = function() {
 
 Room.prototype.construct = function(obj) {
   var ret;
-  if (typeof(obj) === 'object') {
+  if (typeof(obj) === 'object' && obj) {
     ret = util.isArray(obj) ? [] : {};
 
     var keys = Object.keys(obj);
@@ -212,7 +212,7 @@ Room.prototype.updateObject = function(update) {
   }
 
   function toSpecialObj(_obj) {
-    if (typeof(_obj) === 'object') {
+    if (typeof(_obj) === 'object' && _obj) {
       var keys = Object.keys(_obj);
       for (var i = 0, ii = keys.length; i < ii; i += 1) {
 
