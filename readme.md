@@ -8,6 +8,9 @@ shared objects, we provide an `sink` function that executes does all the work of
 synchronization under the hood so the users can access a simple API and be able
 to work with shared objects.
 
+***Please note that the current implementation is limited to Chrome. Go to
+`chrome://flags` and enable 'Experimental Javascript.'***
+
 ## Usage
 
 ```javascript
