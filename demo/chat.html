@@ -3,6 +3,7 @@
   <head>
     <link href="chat.css" rel="stylesheet" type="text/css">
     <script src="../dist/sink.js"></script>
+    <script src="./extra.js"></script>
     <script
       src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
 
@@ -20,7 +21,16 @@
           // Initialization.
           if (!chat.messages) {
             chat.messages = [];
+            chat.ids = {};
           }
+
+          // My color.
+          var id = util.randomHSLColor();
+          while (chat.ids[id]) {
+            id = util.randomHSLColor();
+          }
+          chat.ids[id] = 1;
+          $('.message').css({ color: id });
 
           setInterval(checkMessages, 100);
 
@@ -28,7 +38,7 @@
           $('.chat').submit(function(ev) {
 
             var message = $('.message').val();
-            chat.messages.push(message);
+            chat.messages.push([id, message]);
             $('.message').val('');
 
             ev.preventDefault();
@@ -40,7 +50,10 @@
             $('.messages').empty();
 
             for (var i = 0, ii = chat.messages.length; i < ii; i += 1) {
-              $('.messages').append('<div class="line">' + chat.messages[i] + '</div>');
+              var message = chat.messages[i];
+              var $message = $('<div class="line">' + message[1] + '</div>');
+              $message.css({ color: message[0] });
+              $('.messages').append($message);
             }
 
             if (chat.messages.length !== length) {
