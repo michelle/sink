@@ -1,8 +1,22 @@
 $(document).ready(function(){
-  
+  /*
+  FIXME:
+  -Tron.visited somehow not syncing. When opened in two tabs, neither one "sees" the other's updates
+   This is reproducible, when I create a new tab, the old tab stops pushing updates for some reason.
+   Is this a collision problem?
+  TODO:
+  -When we crash, reset ALL players. This would be easier with a start screen and a start button
+  -Add a start button!
+  -change color/shape of leading square (current position)
+  -UI STUFF
+  -Decrement number of players if someone leaves
+  -Only start if 2 or more players
+  -Enforce maximum number of players
+  */
   sink('tron_demo', function(Tron){
 
     //Canvas stuff
+    //Is currently a 45x45 grid.
     var canvas = $("#canvas")[0];
     var ctx = canvas.getContext("2d");
     var w = $("#canvas").width();
@@ -13,29 +27,37 @@ $(document).ready(function(){
     var cw = 10;
     var direction;
     var score;
-    var my_position = "0,0"
+    var my_position = "0,0";
+    var player_num;
     
     //Initialize sinked variable
-    if (Tron.visited === undefined){
+    if (Tron.visited === undefined) {
+      Tron.reset = true;
       Tron.visited = {};
       Tron.players = 0;
+      Tron.player_starts = {0:["22,3", "down"], 1:["22,42", "up"], 2:["3,22","right"], 3:["42,22", "left"]}
+      player_num = 0;
     } else{
-      Tron.players++;
+      Tron.players += 1;
+      player_num = Tron.players
     }
     
+    //Initialize initial init-conditions
     function init()
     {
-      //TODO: Initialize an array in sinked object for these things
-      direction = "right";
+
+      my_position = Tron.player_starts[player_num % 4][0]
+      direction = Tron.player_starts[player_num % 4][1];
       score = 0;
-      my_color = "blue"
+      my_color = util.randomHSLColor();
       Tron.visited = {}
-      my_position = "0,0"
       
-      //Lets move the snake now using a timer which will trigger the paint function
+      //Start game loop!
       if(typeof game_loop != "undefined") clearInterval(game_loop);
-      game_loop = setInterval(paint, 100);
+      game_loop = setInterval(paint, 1000);
     }
+    
+    //First init
     init();
     
     //render loop
@@ -62,17 +84,17 @@ $(document).ready(function(){
       my_position = nx + "," + ny;
       
       //Game ends if player crashes into a visited location
-      //TODO: Add logic. Currently just restarts
+      //TODO: Add logic. Currently just ENDS THE GAME :(
       if(nx == -1 || nx == w/cw || ny == -1 || ny == h/cw || Tron.visited[my_position])
       {
         //restart game
         console.log("crashed")
-        init();
+        clearInterval(game_loop)
         return;
       }	
       
       //Add new location to visited
-      Tron.visited[nx + "," + ny] = my_color;
+      Tron.visited[my_position] = my_color;
       
       //Paint!
       var visited_keys = Object.keys(Tron.visited)
@@ -114,11 +136,8 @@ $(document).ready(function(){
           e.preventDefault();
       }
     }, false);
-	
+  
   //end sink
-	})
-	
-	
-	
-	
+  })
+
 })
