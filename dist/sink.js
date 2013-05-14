@@ -42,6 +42,9 @@ util = {
         // no change.
         if (obj[name] === pd) {
           return;
+        } else if (typeof(pd) == "function"){
+          //For now, do not support function updates
+          //return;
         }
 
         var socket = metadata.socket; //LAYOUT:[ ‘update’, [[‘michelle.lastname’, ‘bu’]], 1 ]
