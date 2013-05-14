@@ -150,7 +150,7 @@ Room.prototype.sync = function(updates, from) {
 
     // Check if collision.
     var previous;
-    if (version && (previous = this.getLastVersion(update)) && version < previous.version) {
+    if (version && (previous = this.getLastVersion(update)) && version <= previous.version) {
       collisions.push([update[0], this.construct(previous)]);
 
     } else {
@@ -174,9 +174,11 @@ Room.prototype.sync = function(updates, from) {
 // TODO: handle arrays.
 Room.prototype.getLastVersion = function(update) {
   update = update[0].split(".");
-  var obj;
-  while (update.length && (obj = this.object[update.shift()])) {
-    // Lalala.
+  var obj = this.object;
+  while (update.length && (obj = obj[update.shift()])) {
+    if (update.length) {
+      obj = obj.value;
+    }
   }
   return obj;
 };

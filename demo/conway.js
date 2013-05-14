@@ -51,11 +51,12 @@ $(document).ready(
     var populationSpan = document.getElementById("population");
     var myPopulationSpan = document.getElementById("score");
 
-    sink('game_of_life_demo', function(Life){
+    sink('game_of_life_demo', { debug: true, host: '192.168.0.4', collision: function(err) { console.log(err.message);} }, function(Life){
 
       // If variables are not initialized, do so.
       var originator;
       var id;
+
       if (Life.CELL_SIZE === undefined) {
         Life.CELL_SIZE = 20;
         Life.X = 600;
@@ -70,19 +71,27 @@ $(document).ready(
         Life.minimum = 2;
         Life.maximum = 3;
         Life.spawn = 3;
-        Life.id = 0;
+        Life.id = 1;
 
         Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
         Life.counter = 0;
 
         Life.population = 0;
         Life.control = {};
+      } else {
+        Life.id += 1;
       }
-
-      Life.id += 1;
 
       id = Life.id;
       Life.control[id] = 0;
+
+      // Clean up properly.
+      window.onbeforeunload = function() {
+        if (Life.originator) {
+          Life.originator = false;
+        }
+        delete Life.control[id];
+      }
 
       // Game of life logic
       // Only the originator performs this step.
@@ -129,7 +138,9 @@ $(document).ready(
 
         // Copy into Life grid and update all values.
         copyGrid(nextGenerationGrid, Life.grid, Life.WIDTH, Life.HEIGHT);
-        Life.control = control;
+        if (Object.keys(control).length > 0) {
+          Life.control = control;
+        }
         Life.population = population;
         Life.counter++;
       };
@@ -195,13 +206,9 @@ $(document).ready(
         if (!Life.originator) {
           originator = true;
           Life.originator = true;
+          console.log('I\m the originator!');
 
           setInterval(updateState, Life.DELAY);
-
-          window.onbeforeunload = function() {
-            Life.originator = false;
-            delete Life.control[id];
-          }
         }
 
         // Recurse render loop.
@@ -267,10 +274,6 @@ $(document).ready(
       // Start render loop.
       window.webkitRequestAnimationFrame(render);
 
-      // Clean up properly.
-      window.onbeforeunload = function() {
-        delete Life.control[id];
-      }
     });
   }
 );
