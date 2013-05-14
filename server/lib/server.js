@@ -90,8 +90,10 @@ Room.prototype.construct = function(obj) {
     var keys = Object.keys(obj);
     for (var i = 0, ii = keys.length; i < ii; i += 1) {
       var key = keys[i];
-      var next_obj = obj[key].value;
-      ret[key] = this.construct(next_obj);
+      if (obj[key]) {
+        var next_obj = obj[key].value;
+        ret[key] = this.construct(next_obj);
+      }
     }
   } else {
     ret = obj;
