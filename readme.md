@@ -14,7 +14,7 @@ to work with shared objects.
 ## Usage
 
 ```javascript
-sink('mybathroom', function(s) {
+sink('mybathroom', function(s, err) {
 
   // s is your new synced object.
   s.toilet = {};
@@ -28,7 +28,7 @@ sink('mybathroom', function(s) {
 
   setInterval(checkToilet, 100);
 
-  // Synced will automatically be updated.
+  // Synced objects will automatically be updated.
   function checkToilet() {
     if (loo.indexOf('poo') !== -1) {
       // flush.
@@ -41,7 +41,7 @@ sink('mybathroom', function(s) {
 
 ## API
 
-`sink(namespace, options, function(s) { });`:
+`sink(namespace, options, function(synced, err) { });`:
 
 * `namespace`: All Sink objects in the same namespace are synced.
 * `options`:
@@ -50,3 +50,5 @@ sink('mybathroom', function(s) {
   * `host`: Host name of your Sink server. Defaults to localhost. If the cloud server is used, the `namespace` passed in should be an API key.
   * `port`: Port # of your Sink server. Defaults to 8080.
   * `debug`: If true, will display Sink debug messages. Defaults to false.
+* `synced`: The synced object.
+* `err`: Error message, if `synced` is `null`.
