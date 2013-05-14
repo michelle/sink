@@ -13,7 +13,9 @@
         var room = window.location.hash.split('#').pop() || 'Global';
         $('.name').html(room);
 
-        sink(room, function(chat) {
+        sink(room, {
+              //host: '192.168.0.4'
+            }, function(chat) {
 
           // Initialization.
           if (!chat.messages) {
