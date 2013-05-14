@@ -156,6 +156,9 @@ Room.prototype.sync = function(updates, from) {
     } else {
       if (type === 'update') {
         this.updateObject(update);
+      } else if (type === 'push') {
+        // TODO
+        this.pushValue(update);
       } else {
         this.deleteProperty(update);
       }
