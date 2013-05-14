@@ -51,7 +51,7 @@ $(document).ready(
     var populationSpan = document.getElementById("population");
     var myPopulationSpan = document.getElementById("score");
 
-    sink('game_of_life_demo', { debug: true, host: '192.168.0.4', collision: function(err) { console.log(err.message);} }, function(Life){
+    sink('game_of_life_demo', { host: '192.168.0.4', collision: function(err) { console.log(err.message);} }, function(Life){
 
       // If variables are not initialized, do so.
       var originator;
