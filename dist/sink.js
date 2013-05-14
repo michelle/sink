@@ -1,6 +1,6 @@
 /*! sink.js build:0.0.0, development. Copyright(c) 2013 Eric Zhang, Michelle Bu, Rolland Wu MIT Licensed */
 (function(exports){
-util = {
+var util = {
   extend: function(dest, source) {
     for(var key in source) {
       if(source.hasOwnProperty(key)) {
@@ -44,7 +44,7 @@ util = {
           return;
         } else if (typeof(pd) == "function"){
           //For now, do not support function updates
-          //return;
+          return;
         }
 
         var socket = metadata.socket; //LAYOUT:[ ‘update’, [[‘michelle.lastname’, ‘bu’]], 1 ]
@@ -194,7 +194,8 @@ util = {
       global.attachEvent('onmessage', handleMessage);
     }
     return setZeroTimeoutPostMessage;
-  }(this))
+  }(this)),
+
 };
 function sink(namespace, options, cb) {
   if (typeof(options) === 'function') {
