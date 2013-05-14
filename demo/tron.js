@@ -13,26 +13,22 @@ $(document).ready(function(){
   var visited = {};
   var my_position = "0,0"
 	
-	//Lets create the snake now
-	var snake_array; //an array of cells to make up the snake
-	
 	function init()
 	{
-		direction = "right"; //default direction
-		//finally lets display the score
+    //TODO: Initialize an array in sinked object for these things
+		direction = "right";
 		score = 0;
 		my_color = "blue"
     visited = {}
     my_position = "0,0"
     
 		//Lets move the snake now using a timer which will trigger the paint function
-		//every 60ms
 		if(typeof game_loop != "undefined") clearInterval(game_loop);
 		game_loop = setInterval(paint, 100);
 	}
 	init();
 	
-	//Lets paint the snake now
+  //render loop
 	function paint()
 	{
 		//To avoid the snake trail we need to paint the BG on every frame
@@ -42,13 +38,11 @@ $(document).ready(function(){
 		ctx.strokeStyle = "black";
 		ctx.strokeRect(0, 0, w, h);
 		
-		//The movement code for the snake to come here.
-		//The logic is simple
+		//The movement code for the player to come here.
     var pos_array = my_position.split(",")
 		var nx = parseInt(pos_array[0])
 		var ny = parseInt(pos_array[1])
-		//These were the position of the head cell.
-		//We will increment it to get the new head position
+    
 		//Lets add proper direction based movement now
 		if(direction == "right") nx++;
 		else if(direction == "left") nx--;
@@ -58,17 +52,13 @@ $(document).ready(function(){
     //update my position
     my_position = nx + "," + ny;
     
-		//Lets add the game over clauses now
-		//This will restart the game if the snake hits the wall
-		//Lets add the code for body collision
-		//Now if the head of the snake bumps into its body, the game will restart
-    //FIXME: Add clause to check for collision
+		//Game ends if player crashes into a visited location
+    //TODO: Add logic. Currently just restarts
 		if(nx == -1 || nx == w/cw || ny == -1 || ny == h/cw || visited[my_position])
 		{
 			//restart game
       console.log("crashed")
 			init();
-			//Lets organize the code a bit now.
 			return;
 		}	
     
@@ -97,18 +87,6 @@ $(document).ready(function(){
 		ctx.fillRect(x*cw, y*cw, cw, cw);
 	}
 	
-	function check_collision(x, y, array)
-	{
-		//This function will check if the provided x/y coordinates exist
-		//in an array of cells or not
-		for(var i = 0; i < array.length; i++)
-		{
-			if(array[i].x == x && array[i].y == y)
-			 return true;
-		}
-		return false;
-	}
-	
 	//Lets add the keyboard controls now
   //use keydown to prevent sending multiple signals at once
 	$(document).keydown(function(e){
@@ -118,12 +96,11 @@ $(document).ready(function(){
 		else if(key == "38" && direction != "down") direction = "up";
 		else if(key == "39" && direction != "left") direction = "right";
 		else if(key == "40" && direction != "up") direction = "down";
-		//The snake is now keyboard controllable
 	})
   
   //prevent scrolling of window when playing TRON
 	window.addEventListener("keydown", function(e) {
-    // space and arrow keys
+    //space and arrow keys
     if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
         e.preventDefault();
     }
