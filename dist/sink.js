@@ -2,8 +2,8 @@
 (function(exports){
 var util = {
   extend: function(dest, source) {
-    for(var key in source) {
-      if(source.hasOwnProperty(key)) {
+    for (var key in source) {
+      if (source.hasOwnProperty(key)) {
         dest[key] = source[key];
       }
     }
@@ -73,9 +73,7 @@ var util = {
         util.setZeroTimeout(sendUpdates);
 
         // RECURSIVE PROXYYYYYY.
-        if (typeof(pd) === 'object') {
-          pd = util.proxify(pd, path + name, {metadata: metadata, nested: nested});
-        }
+        pd = util.proxify(pd, path + name, {metadata: metadata, nested: nested});
         obj[name] = pd;
       },
 
@@ -245,7 +243,7 @@ SyncedProxy.prototype.updateObject = function(properties) {
     var key = property[0].pop();
     var nesting = property[0].join('.');
 
-    this.nested[nesting][key] = property[1];
+    this.nested[nesting][key] = util.proxify(property[1], nesting + '.' + key, { metadata: this.options, nested: this.nested });
   }
 
   // We should not be receiving messages out of order.
