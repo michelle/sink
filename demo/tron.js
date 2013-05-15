@@ -14,13 +14,12 @@ $(document).ready(function() {
     ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
   };
 
-
   /*
     TODO:
     - Add a start button!
     - Change color/shape of leading square (current position)
-    - Decrement number of players if someone leaves
     - Enforce maximum number of players
+    - Reset button.
   */
   sink('tron_demo', {
         host: '192.168.0.4'
@@ -28,10 +27,10 @@ $(document).ready(function() {
       }, function(Tron) {
 
     var STARTING_POSITIONS = {
-      0: [[107, 10], "down"],
-      1: [[107, 215], "up"],
-      2: [[10, 107],"right"],
-      3: [[215, 107], "left"]
+      0: [[108, 6], "down"],
+      1: [[108, 219], "up"],
+      2: [[6, 108],"right"],
+      3: [[219, 108], "left"]
     };
     var INTERVAL = 1;
 
@@ -73,10 +72,10 @@ $(document).ready(function() {
 
     // Initialize sinked variable
     if (Tron.visited === undefined) {
-      Tron.reset = true;
       Tron.visited = {};
       Tron.all_visited = {};
       Tron.players = 0;
+      Tron.start = false;
     } else {
       Tron.players += 1;
     }
@@ -96,10 +95,19 @@ $(document).ready(function() {
       }
 
       Tron.visited[my_color] = [];
+      Tron.visited[my_color].push(my_position);
+      Tron.all_visited[my_position] = 1;
+
+      if (Object.keys(Tron.visited).length > 1) {
+        Tron.start = true;
+      }
 
       window.onbeforeunload = function() {
         if (alive) {
           removeVisited();
+        }
+        if (Object.keys(Tron.visited).length < 2) {
+          Tron.start = false;
         }
       }
 
@@ -109,17 +117,18 @@ $(document).ready(function() {
     // Crash logic.
     function checkCrash() {
       // Game ends if player crashes into a wall or a visited location.
-      if (nx === -2 ||
-          nx == WIDTH/CELL_SIZE + 2 ||
-          ny === -2 ||
-          ny == HEIGHT/CELL_SIZE + 2 ||
+      if (nx === -1 ||
+          nx == WIDTH/CELL_SIZE + 1 ||
+          ny === -1 ||
+          ny == HEIGHT/CELL_SIZE + 1 ||
           Tron.all_visited[my_position]) {
 
         console.log('Died at', nx, ny);
-        console.log(Tron.visited);
         alive = false;
         removeVisited();
-        console.log(Tron.all_visited);
+        if (Object.keys(Tron.visited).length < 2) {
+          Tron.start = false;
+        }
         return;
       }
 
@@ -147,7 +156,7 @@ $(document).ready(function() {
       ctx.fillStyle = '#fff';
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-      if (alive) {
+      if (alive && Tron.start) {
         // Change direction if key is selected.
         // Do not allow diagonal moving.
         if (keyState[37] && direction !== 'right') {
