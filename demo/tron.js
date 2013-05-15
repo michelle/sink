@@ -22,7 +22,7 @@ $(document).ready(function() {
     - Reset button.
   */
   sink('tron_demo', {
-        host: '192.168.0.4'
+        host: '10.10.65.184'
         //debug: true
       }, function(Tron) {
 
