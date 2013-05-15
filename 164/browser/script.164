@@ -1,0 +1,10 @@
+##
+# [1] Scripting.
+#
+def Script = Node:new({})
+
+# Handle executing the program linked from "ref" attribute in the Script tag
+# during pass 5 of the layout.
+Script.pass5_BindEventListeners = lambda(self) {
+  native runtime.evaluateScript({ url = self.ref })
+}

@@ -1,0 +1,78 @@
+
+def sink(room, cb) {
+
+  def base = 'http://192.168.0.2:8081'  
+  def version = 0
+  def old = null
+  def sinkobj = {}
+  def i = 0
+  def lock = 0
+  
+  def getListenUrl() {
+    i = i + 1
+    base + "/listen/" + room + "/" + version + "?i=" + i
+  }
+
+  def getSendUrl(message) {
+    i = i + 1
+    base + "/send/" + room + "/" + version + "?i=" + i + "&data=" + message
+  }
+  
+  def updatesink(e) {
+    print("Updating old " + e.response.data)
+    old = native runtime.jsondumps({obj = e.response.data})
+    version = e.response.version
+    print("Updating version " + version)
+    def newkeys = native runtime.keys({obj=e.response.data})
+    for(key in newkeys) {
+      sinkobj[key] = e.response.data[key]
+    }
+  }
+ 
+  
+  def startInterval() {
+    window:setInterval(100, lambda(e) { 
+      if (lock == 0) {
+        lock = 1
+        def sinkjson = native runtime.jsondumps({obj = sinkobj})
+        if (sinkjson != old) {
+          print("Sending " + sinkjson + " because newer than " + old)
+          window:http(getSendUrl(sinkjson), lambda(e) {
+            print("Got update response")
+            print(e.response.version)
+            if (e.response != "Invalid room") {
+              updatesink(e)
+            }
+            lock = 0
+          })
+        } else {
+          lock = 0
+        }
+      } else {
+        print("Locked!")
+      }
+    })
+    window:setInterval(1000, lambda(e) {
+      if (lock == 0) {
+        window:http(getListenUrl(), lambda(e) {
+          if (e.response != 'Up to date') {
+            print("Chat update!")
+            updatesink(e)
+          }
+        })
+      }
+    })
+  }
+
+  print("Starting sink HTTP request")
+  window:http(getListenUrl(), lambda(e){
+    print("Got initial response")
+    print(e.response)
+    updatesink(e)
+    cb(sinkobj)
+    startInterval()
+  })
+
+  
+}
+

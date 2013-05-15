@@ -1,0 +1,292 @@
+##
+# bQuery library for 164 browser.
+#
+def Q = Object:new({})
+
+# bQuery selectors.
+def bquery(klass) {
+  def index = 0
+  def elements = {}
+
+  for (n in preorder(window)) {
+    if ('klass' in n) {
+      if (n.klass == klass) {
+        elements[index] = n
+        index = index + 1
+      }
+    }
+  }
+
+  # Pass in a factory of the elements found.
+  def factory = lambda() {
+    _getIterator_(elements)
+  }
+  Q:new({ factory = factory })
+}
+
+# Shorthand.
+def bq(klass) {
+  bquery(klass)
+}
+
+##
+# bQuery library functions.
+#
+
+# Throw away all elements such that fun(element) is not True. fun is a function.
+Q.filter = lambda(self, fun) {
+  def index = 0
+  def elements = {}
+
+  for (element in self.factory()) {
+    if (fun(element) == True) {
+      elements[index] = element
+      index = index + 1
+    }
+  }
+
+  # Stack.
+  def top = {}
+  top['factory'] = self.factory
+  if ('top' in self) {
+    top['next'] = self.top
+  }
+  self.top = top
+
+  self.factory = lambda() {
+    _getIterator_(elements)
+  }
+  self
+}
+
+# Produce a new selection by applying fun on each elements of the current
+# selection. fun is a function.
+# TODO: test
+Q.map = lambda(self, fun) {
+  def index = 0
+  def elements = {}
+
+  for (element in self.factory()) {
+    elements[index] = fun(element)
+    index = index + 1
+  }
+  self.factory = lambda() {
+    _getIterator_(elements)
+  }
+
+  if ('top' in self) {
+    self.top = null
+  }
+  self
+}
+
+# Apply fun on all elements currently selected. fun is a function.
+# TODO: test
+Q.each = lambda(self, fun) {
+  for (element in self.factory()) {
+    fun(element)
+  }
+  self
+}
+
+# Return a new selection consisting of the immediate children of the currently
+# selected elements.
+# TODO: test
+Q.children = lambda(self) {
+  def index = 0
+  def elements = {}
+
+  for (element in self.factory()) {
+    if ('children' in element) {
+      for (child in element.children) {
+        elements[index] = child
+        index = index + 1
+      }
+    }
+  }
+
+  self.factory = lambda() {
+    _getIterator_(elements)
+  }
+
+  if ('top' in self) {
+    self.top = null
+  }
+  self
+}
+
+# Return a new selection consisting of the immediate parents of the currently
+# selected elements.
+# TODO: test
+Q.parent = lambda(self) {
+  def index = 0
+  def elements = {}
+
+  for (element in self.factory()) {
+    if ('parent' in element) {
+      elements[index] = element.parent
+      index = index + 1
+    }
+  }
+
+  self.factory = lambda() {
+    _getIterator_(elements)
+  }
+
+  if ('top' in self) {
+    self.top = null
+  }
+  self
+}
+
+# Return a new selection consisting of all the ancestors of the currently
+# selected elements.
+# TODO: test
+Q.parents = lambda(self) {
+  def index = 0
+  def elements = {}
+
+  for (element in self.factory()) {
+    while ('parent' in element) {
+      elements[index] = element.parent
+      element = element.parent
+      index = index + 1
+    }
+  }
+
+  self.factory = lambda() {
+    _getIterator_(elements)
+  }
+
+  if ('top' in self) {
+    self.top = null
+  }
+  self
+}
+
+Q.end = lambda(self) {
+  if ('top' in self) {
+    self.factory = self.top['factory']
+    if ('next' in self.top) {
+      self.top = self.top['next']
+    }
+  }
+  self
+}
+
+# Deep-copy every selected element
+# TODO: test
+Q.clone = lambda(self) {
+  def index = 0
+  def elements = {}
+
+  for (element in self.factory()) {
+    elements[index] = element:clone()
+    index = index + 1
+  }
+  self.factory = lambda() {
+    _getIterator_(elements)
+  }
+  self
+}
+
+# Insert content to the end of each element in the set of matched elements. content is a TML program encoded as a string.
+Q.append = lambda(self, content) {
+  def rawNode = native runtime.parseTML({tml = content})
+  fixRawDOM(rawNode)
+  for (element in self.factory()) {
+    def clonedNode = rawNode:clone()
+    clonedNode.parent = element
+    if ("children" in element) {
+      element.children[len(element.children)] = clonedNode
+    } else {
+      element.children = {}
+      element.children[0] = clonedNode
+    }
+  }
+  self
+}
+
+# TODO: test
+Q.appendTo = lambda(self, klass) {
+  def index = 0
+  def destElements = {}
+
+  for (n in preorder(window)) {
+    if ('klass' in n) {
+      if (n.klass == klass) {
+        destElements[index] = n
+        index = index + 1
+      }
+    }
+  }
+
+  for (element in self.factory()) {
+    def firstClone = element:clone()
+    for (destElement in destElements) {
+      def clonedNode = firstClone:clone()
+      clonedNode.parent = destElement
+      if ("children" in destElement) {
+        destElement.children[len(destElement.children)] = clonedNode
+      } else {
+        destElement.children = {}
+        destElement.children[0] = clonedNode
+      }
+    }
+  }
+  self
+}
+
+# TODO: test
+Q.click = lambda(self, code) {
+  for (element in self.factory()) {
+    # element:addEventListener("click", code)
+    if ('onclick' in element) {
+      element:resetHandlers()
+    }
+    element.onclick = code
+    element:addEventListener("click", code)
+  }
+  self
+}
+
+# Return a new selection consisting of the first element in the current
+# selection.
+# TODO: test
+Q.first = lambda(self) {
+  def first = self.factory()()
+  def element = {}
+  element[0] = first
+  self.factory = lambda() {
+    _getIterator_(element)
+  }
+
+  if ('top' in self) {
+    self.top = null
+  }
+  self
+}
+
+# Change the background of the elements currently selected. color is a string.
+Q.background = lambda(self, color) {
+  for (element in self.factory()) {
+    element.background = color
+  }
+  self
+}
+
+# Change the font size of the elements currently selected. size is a number
+# encoded as a string. 
+# NOTE: due to bug in spec we're also changing fontSize of children.
+Q.font = lambda(self, size) {
+  for (element in self.factory()) {
+    element.fontSize = size
+    # Hacky.
+    if ('children' in element) {
+      for (child in element.children) {
+        child.fontSize = size
+      }
+    }
+  }
+  self
+}

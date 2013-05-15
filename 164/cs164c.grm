@@ -1,0 +1,127 @@
+%ignore          /[ \t\v\f]+/
+%ignore          /(\\\n)/
+
+// The cs164 Grammar
+%left 'in'
+%left '||'
+%left '&&'
+%left '<=' '<' '>=' '>'
+%left '==' '!='
+%left '+' '-'
+%left '*' '/'
+%left '(' ')' '[' ']' '.'
+%left '()' '[]'
+
+%%
+
+P -> SList
+    | ONewLine                                  %{return [] %}
+    ;
+
+SList -> ONewLine SList2 ONewLine               %{return n2.val %}
+    ;
+    
+SList2 -> SList2 NewLine S  %dprec 1            %{
+    if n3.val != '#COMMENT':
+        n1.val.append(n3.val);
+    return n1.val %}
+        | S                                     %{
+    if n1.val != '#COMMENT':
+        return [n1.val]
+    return [] %}
+        ;
+
+ONewLine -> _
+    | NewLine
+    ;
+        
+SListBraces -> '{' P '}'   %dprec 1                %{return n2.val %}
+    | '{}'              %dprec 2                %{return [] %}
+    ;
+    
+S -> E                                          %{return ('exp', n1.val) %}
+    | Id '=' E                                  %{return ('asgn', n1.val, n3.val) %}
+    | 'def' Id '=' E                            %{return ('def', n2.val, n4.val) %}
+    | 'def' Id IdList SListBraces             %{return ('def', n2.val, ('lambda', n3.val, n4.val)) %}
+    | 'def' E ':' IdAsString IdList SListBraces       %{return ('put', n2.val, n4.val, ('lambda', ['self'] + n5.val, n6.val)) %}
+    | E '[' E ']' '=' E                         %{return ('put', n1.val, n3.val, n6.val) %}
+    | E '.' IdAsString '=' E                    %{return ('put', n1.val, n3.val, n5.val) %}
+    | 'print' E     %dprec 5                    %{return ('print', n2.val)%}
+    | 'error' E     %dprec 6                    %{return ('error', n2.val)%}
+    | 'if' '(' E ')' SListBraces 'else' SListBraces     %{return ('if', n3.val, n5.val, n7.val) %}
+    | 'if' '(' E ')' SListBraces              %{return ('if', n3.val, n5.val, None) %}
+    | 'while' '(' E ')' SListBraces           %{return ('while', n3.val, n5.val) %}
+    | 'for' '(' Id 'in' E ')' SListBraces     %{return ('for', n3.val, n5.val, n7.val) %}
+    | Comment
+    | S Comment                                 %{return n1.val %}
+    ;
+
+IdList -> '(' Ids ')'   %dprec 1                %{return n2.val %}
+    | '()'              %dprec 2                %{return [] %}
+    ;
+    
+Ids -> Ids ',' Id                               %{n1.val.append(n3.val); return n1.val %}
+    | Id                                        %{return [n1.val]%}
+    ;
+    
+EList  -> EList ',' E                           %{n1.val.append(n3.val); return n1.val %}
+    | E                                         %{return [n1.val] %}
+    ;
+
+ListComp -> ListComp ',' LstC                   %{n1.val.append(n3.val); return n1.val %}
+    | LstC                                      %{return [n1.val] %}
+    ;
+    
+LstC -> Id '=' E                                %{return (n1.val, n3.val) %}
+    ;
+    
+E -> 'null'                                     %{return ('null',) %}
+    | Num                                       %{return ('int-lit', n1.val)%}
+    | Id                                        %{return ('var', n1.val) %}
+    | String                                    %{return ('string-lit', n1.val)%}
+    | '{}'                                      %{return ('dict-lit', []) %}
+    | '{' ListComp '}'                          %{return ('dict-lit', n2.val) %}
+    | '(' E ')'                                 %{return n2.val %}
+    | 'native' IdAsString '.' IdAsString '(' E ')'
+                                                %{return ('native', n2.val, n4.val, n6.val) %}
+    | E '+' E                                   %{return ('+', n1.val, n3.val) %}
+    | E '-' E                                   %{return ('-', n1.val, n3.val) %}
+    | E '*' E                                   %{return ('*', n1.val, n3.val) %}
+    | E '/' E                                   %{return ('/', n1.val, n3.val) %}
+    | E '==' E                                  %{return ('==', n1.val, n3.val) %}
+    | E '!=' E                                  %{return ('!=', n1.val, n3.val) %}
+    | E '<' E                                   %{return ('<', n1.val, n3.val) %}    
+    | E '>' E                                   %{return ('>', n1.val, n3.val) %}
+    | E '<=' E                                  %{return ('<=', n1.val, n3.val) %}
+    | E '>=' E                                  %{return ('>=', n1.val, n3.val) %}
+    | E '&&' E                                  %{return ('&&', n1.val, n3.val) %}
+    | E '||' E                                  %{return ('||', n1.val, n3.val) %}
+    | E 'in' E                                  %{return ('in', n1.val, n3.val) %}
+    | E '[' E ']'                               %{return ('get', n1.val, n3.val) %}
+    | E ':' IdAsString '(' EList ')'            %{t = n1.val; return ('methodcall', t, n3.val, n5.val) %}
+    | E ':' IdAsString '(' ')'                  %{t = n1.val; return ('methodcall', t, n3.val, []) %}
+    | E ':' IdAsString '()'                     %{t = n1.val; return ('methodcall', t, n3.val, []) %}
+    | E '.' IdAsString                          %{return ('get', n1.val, n3.val) %}
+    | 'len' '(' E ')'                           %{return ('len', n3.val) %}
+    | '[' E 'for' Id 'in' E ']'                 %{return ('comprehension', n2.val, n4.val, n6.val) %}
+    | 'lambda' IdList SListBraces               %{return ('lambda', n2.val, n3.val) %}
+    | E '(' EList ')'                           %{return ('call', n1.val, n3.val) %}
+    | E '(' ')'                                 %{return ('call', n1.val, []) %}
+    | E '()'                                    %{return ('call', n1.val, []) %}
+    | 'ite' '(' E ',' E',' E ')'                %{return ('ite', n3.val, n5.val, n7.val) %}
+    | 'coroutine' '(' E ')'                     %{return ('coroutine', n3.val) %}
+    | 'resume' '(' E ',' E ')'                  %{return ('resume', n3.val, n5.val) %}
+    | 'yield' '(' E ')'                         %{return ('yield', n3.val) %}
+    | 'input' '(' ')'                           %{return ('input', ) %}
+    ;
+
+IdAsString -> Id                                %{return ('string-lit', n1.val) %}
+    ;
+    
+NewLine -> /((\r?\n)|;| )+/ ;
+Num -> /[0-9]+/                                 %{return int(n1.val) %} ;
+Id  -> /[a-zA-Z_][a-zA-Z_0-9]*/ ;
+String -> /"[^"]*"/                             %{return n1.val[1:-1] %}               
+        | /'[^']*'/                             %{return n1.val[1:-1] %}               
+        ;
+Comment -> /#[^\r\n]*/                          %{return '#COMMENT' %} ;

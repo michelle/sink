@@ -1,0 +1,60 @@
+print("Chat client loading....")
+
+def room = "global"
+def nick = null
+def chatsink = null
+def oldlen = 0
+
+def addText(name, message) {
+  def lm = 5
+  def rm = 5
+  if (name == nick) {
+    lm = 200
+  } else {
+    rm = 200
+  }
+  def msgTml = '<HBox background="#ffffff" leftMargin="'+lm+'" rightMargin="'+rm+'" >' + name + ": " + message + "</HBox>"
+  bq("stream"):append(msgTml) 
+}
+
+def send(node, msg) {
+  chatsink["messages"][len(chatsink["messages"])] = {name = nick, msg = msg}
+}
+
+
+def step2(node, name) {
+  nick = name
+  bq("step1"):parent():each(lambda(node){node.children = {}})
+  bq("body"):append('<VBox klass="step2">
+      <HBox background="#33ccff">Chat Stream</HBox>
+      <VBox klass="stream"></VBox>
+      <TextBox onreturn="send(self, event.text)" placeholder="Enter chat message and press enter"></TextBox>
+    </VBox>')
+  relayout()
+  start()
+}
+
+
+def start() {  
+  window:setInterval(1000, lambda(e) {
+    def newlen = len(chatsink["messages"])
+    if (newlen != oldlen) {
+      oldlen = newlen
+      bq("stream"):each(lambda(node){node.children = {}})
+      for(m in chatsink["messages"]) {
+        addText(m.name, m.msg)
+      }
+      relayout()
+    }
+  })
+}
+
+sink(room, lambda(obj){
+  print("Got sink obj")
+  chatsink = obj
+  if ("messages" in chatsink) {
+    print("Found existing chat room")
+  } else {
+    chatsink["messages"] = {}
+  }
+})

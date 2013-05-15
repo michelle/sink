@@ -1,0 +1,174 @@
+# TODO: Actually use the subscribe fn instead of append?
+
+# A new stream object
+def Stream = Object:new({})
+
+def Stream:new(obj) {
+  obj = Object.new(self, obj)
+  obj.cbs = {}
+  obj
+}
+
+# Register fn as a callback, which will be called on each element coming out of
+# the stream. It is possible to subscribe to a single stream multiple times.
+def Stream:subscribe(fn) {
+  append(self.cbs, lambda(el) {
+    fn(el)
+  })
+  null
+}
+
+# Pushes el into the stream and emits it.
+def Stream:push(el) {
+  for (cb in self.cbs) {
+    cb(el)
+  }
+  null
+}
+
+# Pushes each element in elist into the stream individually.
+def Stream:pushMany(elist) {
+  for (el in elist) {
+    self:push(el)
+  }
+  null
+}
+
+# Returns a stream that emits the elements that this stream emits with the given
+# fn applied.
+def Stream:map(fn) {
+  def mapped = Stream:new({})
+  append(self.cbs, lambda(el) {
+    mapped:push(fn(el))
+  })
+  mapped
+}
+
+# Returns a stream that emits the first element emitted by the stream returned
+# by the given fn.
+def Stream:observe(fn) {
+  def observer = Stream:new({})
+  append(self.cbs, lambda(el) {
+    def retrieved = fn(el)
+    def emitted = 0
+    append(retrieved.cbs, lambda(el2) {
+      if (emitted) {
+        emitted = 0
+      } else {
+        observer:push(el2)
+        emitted = 1
+      }
+    })
+  })
+  observer
+}
+
+# Returns a stream that emits each element of the lists that this stream emits.
+def Stream:flatten() {
+  def flattened = Stream:new({})
+  append(self.cbs, lambda(elist) {
+    flattened:pushMany(elist)
+  })
+  flattened
+}
+
+# Returns a stream that emits values pushed to this stream that pass the fn
+# given.
+def Stream:filter(fn) {
+  def filtered = Stream:new({})
+  append(self.cbs, lambda(el) {
+    if (fn(el) == 1) {
+      filtered:push(el)
+    }
+  })
+  filtered
+}
+
+# Makes this stream emits elements emitted by the stream given.
+def Stream:consume(stream) {
+  append(stream.cbs, lambda(el) {
+    self:push(el)
+  })
+  null
+}
+
+# Returns a stream that emits values pushed to both this stream and the stream
+# given.
+def Stream:multiplex(stream) {
+  def multiplexed = Stream:new({})
+  append(self.cbs, lambda(el) {
+    multiplexed:push(el)
+  })
+  append(stream.cbs, lambda(el) {
+    multiplexed:push(el)
+  })
+  multiplexed
+}
+
+# Returns a stream that emits two values at a time, one from this stream and one
+# from the given stream.
+def Stream:zip(stream) {
+  def zipped = Stream:new({})
+
+  def q1 = {}
+  def q2 = {}
+  def l1 = q1
+  def l2 = q2
+
+  append(self.cbs, lambda(el) {
+    if ('next' in q2) {
+      def pair = {}
+
+      append(pair, el)
+      append(pair, q2['value'])
+      zipped:push(pair)
+      # pop
+      q2 = q2['next']
+    } else {
+      l1['value'] = el
+      l1['next'] = {}
+      l1 = l1['next']
+    }
+  })
+  append(stream.cbs, lambda(el) {
+    if ('next' in q1) {
+      def pair = {}
+
+      append(pair, q1['value'])
+      append(pair, el)
+      q1 = q1['next']
+      zipped:push(pair)
+      # pop
+    } else {
+      l2['value'] = el
+      l2['next'] = {}
+      l2 = l2['next']
+    }
+  })
+
+  zipped
+}
+
+# STATIC METHODS
+Stream.timer = lambda(ms) {
+  def timed = Stream:new({})
+  window:setInterval(ms, lambda(e) { timed:push(1) })
+  timed
+}
+
+Stream.fromDOMEvent = lambda(node, ev) {
+  def domStream = Stream:new({})
+  if ('children' in node) {
+    for (child in node.children) {
+      child:addProxyEventListener(ev, lambda(e) { domStream:push(e) }, domStream)
+    }
+  }
+  node:addProxyEventListener(ev, lambda(e) { domStream:push(e) }, domStream)
+  domStream
+}
+
+Stream.fromHttpRequest = lambda(url) {
+  def httpStream = Stream:new({})
+  window:http(url, lambda(e) { httpStream:push(e.response) })
+  httpStream
+}
