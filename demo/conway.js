@@ -52,7 +52,7 @@ $(document).ready(
     var myPopulationSpan = document.getElementById("score");
 
     sink('game_of_life_demo', {
-          host: '10.10.65.184',
+          //host: '10.10.65.184',
           collision: function(err) { console.log(err.message); }
         }, function(Life){
 
