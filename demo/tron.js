@@ -12,25 +12,20 @@ $(document).ready(function() {
   function paintCell(x, y, color) {
     ctx.fillStyle = color;
     ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-  }
+  };
 
 
   /*
-  FIXME:
-  -Tron.visited somehow not syncing. When opened in two tabs, neither one "sees" the other's updates
-   This is reproducible, when I create a new tab, the old tab stops pushing updates for some reason.
-   Is this a collision problem?
-  TODO:
-  -When we crash, reset ALL players. This would be easier with a start screen and a start button
-  - ^ Reset ALL players? Or let the rest continue playing if >= 2?
-  -Add a start button!
-  -change color/shape of leading square (current position)
-  -UI STUFF
-  -Decrement number of players if someone leaves
-  -Only start if 2 or more players
-  -Enforce maximum number of players
+    TODO:
+    - Add a start button!
+    - Change color/shape of leading square (current position)
+    - Decrement number of players if someone leaves
+    - Enforce maximum number of players
   */
-  sink('tron_demo', function(Tron) {
+  sink('tron_demo', {
+        host: '192.168.0.4'
+        //debug: true
+      }, function(Tron) {
 
     var STARTING_POSITIONS = {
       0: [[107, 10], "down"],
@@ -95,6 +90,10 @@ $(document).ready(function() {
 
       score = 0;
       my_color = util.randomHSLColor();
+      // Get a unique color.
+      while (Tron.visited[my_color]) {
+        my_color = util.randomHSLColor();
+      }
 
       Tron.visited[my_color] = [];
 
@@ -117,6 +116,7 @@ $(document).ready(function() {
           Tron.all_visited[my_position]) {
 
         console.log('Died at', nx, ny);
+        console.log(Tron.visited);
         alive = false;
         removeVisited();
         console.log(Tron.all_visited);
