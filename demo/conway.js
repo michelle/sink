@@ -215,7 +215,7 @@ $(document).ready(
         }
 
         // Recurse render loop.
-        window.webkitRequestAnimationFrame(render);
+        window.requestAnimationFrame(render);
       };
 
       // initialize canvas
@@ -275,7 +275,7 @@ $(document).ready(
       }
 
       // Start render loop.
-      window.webkitRequestAnimationFrame(render);
+      window.requestAnimationFrame(render);
 
     });
   }
