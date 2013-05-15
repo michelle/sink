@@ -1,5 +1,6 @@
 var url = require('url');
 var util = require('./util.js');
+var SinkServer164 = require('./server164.js').SinkServer164;
 var WebSocketServer = require('ws').Server;
 
 function SinkServer(port) {
@@ -237,3 +238,4 @@ Room.prototype.updateObject = function(update) {
 };
 
 exports.SinkServer = SinkServer;
+exports.SinkServer164 = SinkServer164;
