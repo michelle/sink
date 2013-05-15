@@ -209,7 +209,7 @@ $(document).ready(
         if (!Life.originator) {
           originator = true;
           Life.originator = true;
-          console.log('I\m the originator!');
+          console.log('I\'m the originator!');
 
           setInterval(updateState, DELAY);
         }
