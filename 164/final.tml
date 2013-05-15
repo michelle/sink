@@ -3,19 +3,18 @@
   <Script ref="final.164"></Script>
 
   <VBox klass="step1">
-    <HBox>164Chat is a one-to-one chat between the 164 browser and a typical browser like Google Chrome</HBox>
+    <HBox>164FinalChat is a group chat between multiple 164 browsers</HBox>
     <HBox>Instructions: choose a nickname to start chatting</HBox>
     <TextBox onreturn="step2(self, event.text)" placeholder="Enter a nickname and press enter to start chatting"></TextBox>
     <HBox>Features</HBox>
-    <HBox>  - One-to-one chat between 164 browser and a normal web browser</HBox>
-    <HBox>  - Realtime, bidirectional</HBox>
-    <HBox>  - Web browser can send photos of 164 browser in chat</HBox>
+    <HBox>  - Chat in a big group</HBox>
+    <HBox>  - Realtime</HBox>
+    <HBox>  - Poor performance due to networking limitations of 164 browser</HBox>
     <HBox>Technical details</HBox>
+    <HBox>  - Uses the `Sink` library, see sink.164</HBox>
     <HBox>  - Implemented TextBox based on QTextEdit (w/ support for placeholder text)</HBox>
     <HBox>  - Implemented 'onReturnPressed' event</HBox>
-    <HBox>  - Rx Stream based messaging from server to 164 browser</HBox>
-    <HBox>  - Node.js server to broker messages between browsers</HBox>
-    <HBox>  - Google Chrome recommended if you want to take photos. Mobile browsers should work fine.</HBox>
+    <HBox>  - Node.js Sink164 server</HBox>
   </VBox>
   
 </VBox>
