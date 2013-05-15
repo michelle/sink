@@ -45,14 +45,14 @@ sink('mybathroom', function(s, err) {
 
 * `namespace`: All Sink objects in the same namespace are synced.
 * `options`:
-  * `force`: If true, will ignore collisions and always update the server and all other clients. Defaults to false.
-  * `collision (: function(err) {} )`: A callback that will be called if a collision is detected on a change to the synced object.
-  * `host`: Host name of your Sink server. Defaults to localhost. If the cloud server is used, the `namespace` passed in should be an API key.
-  * `port`: Port # of your Sink server. Defaults to 8080.
-  * `debug`: If true, will display Sink debug messages. Defaults to false.
+** `force`: If true, will ignore collisions and always update the server and all other clients. Defaults to false.
+** `collision (: function(err) {} )`: A callback that will be called if a collision is detected on a change to the synced object.
+** `host`: Host name of your Sink server. Defaults to localhost. If the cloud server is used, the `namespace` passed in should be an API key.
+** `port`: Port # of your Sink server. Defaults to 8080.
+** `debug`: If true, will display Sink debug messages. Defaults to false.
 * `synced`: The synced object.
 * `err`: Error message, if `synced` is `null`.
 
 ## There's even a 164 version!
 
-<img src="http://i.imgur.com/50R9aln.png">
+![164 implementation](http://i.imgur.com/50R9aln.png)
