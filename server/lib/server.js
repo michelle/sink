@@ -196,8 +196,10 @@ Room.prototype.deleteProperty = function(update) {
     var key = update.shift();
     if (!update.length) {
       delete obj[key];
-    } else {
+    } else if (obj[key]) {
       obj = obj[key].value;
+    } else {
+      break;
     }
   }
 }
