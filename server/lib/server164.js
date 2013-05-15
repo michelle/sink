@@ -8,13 +8,12 @@ function SinkServer164(port) {
   var rooms = {};
   
   server.get('/listen/:room/:version', function(req, res){
-    console.log('Got listen');
     res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
     var room = req.params.room;
     if (!rooms[room]) {
       rooms[room] = {version: 1, data: {}};
     }
-    if (rooms[room].version == req.params.version) {
+    if (rooms[room].version == parseInt(req.params.version, 10)) {
       res.send('Up to date');
       return;
     }    
@@ -22,7 +21,7 @@ function SinkServer164(port) {
   });
 
   server.get('/send/:room/:version', function(req, res) {
-    console.log('Got send', req.query.data);
+    console.log('Got send', req.params.version, req.query.data);
     res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
     var room = req.params.room;
     var version = parseInt(req.params.version, 10);
@@ -32,6 +31,7 @@ function SinkServer164(port) {
       return;
     }
     if (rooms[room].version !== version) {
+      console.log('Rejecting update, already on ', rooms[room].version);
       res.send(rooms[room]);
       return;
     }
