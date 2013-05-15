@@ -1,7 +1,7 @@
 
 def sink(room, cb) {
 
-  def base = 'http://192.168.0.2:8081'  
+  def base = 'http://10.10.64.98:8081'  
   def version = 0
   def old = null
   def sinkobj = {}
