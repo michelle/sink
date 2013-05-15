@@ -286,6 +286,9 @@ function sink(namespace, options, cb) {
   if (Proxy && Proxy.create) {
     util.log('This is Chrome.');
     synced = new SyncedProxy(options);
+  } else if (Proxy) {
+    util.log('This is a direct proxy browser.');
+    //synced = new SyncedDirectProxy(options);
   }
 
   function initSocket() {

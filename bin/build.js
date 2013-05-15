@@ -31,7 +31,7 @@ var starttagIF = '// if node'
 
 var base = [
     'util.js'
-  , 'chromeproxy.js'
+  , 'syncedproxy.js'
   , 'sink.js'
 ];
 
